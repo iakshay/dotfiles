@@ -1,0 +1,9 @@
+{
+	"installed_packages":
+	[
+		"Prolog",
+		"Stylus",
+		"SublimeLinter",
+		"SublimeLinter-pep8"
+	]
+}
