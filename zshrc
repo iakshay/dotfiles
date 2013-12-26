@@ -49,3 +49,5 @@ source $ZSH/oh-my-zsh.sh
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:$HOME/.rvm/bin:$PATH
 
 export EDITOR='subl -w'
+export LC_ALL=en_US.UTF-8  
+export LANG=en_US.UTF-8
