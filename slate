@@ -1,0 +1,28 @@
+config defaultToCurrentScreen true
+
+alias hyper ctrl;alt
+
+alias full      move screenOriginX;screenOriginY               screenSizeX;screenSizeY
+alias lefthalf  move screenOriginX;screenOriginY               screenSizeX/2;screenSizeY
+alias righthalf move screenOriginX+screenSizeX/2;screenOriginY screenSizeX/2;screenSizeY
+
+alias thirdleft  move screenOriginX;screenOriginY                 screenSizeX/3;screenSizeY
+alias thirdmid   move screenOriginX+screenSizeX/3;screenOriginY   screenSizeX/3;screenSizeY
+alias thirdright move screenOriginX+2*screenSizeX/3;screenOriginY screenSizeX/3;screenSizeY
+
+alias bigleft  move screenOriginX;screenOriginY               2*screenSizeX/3;screenSizeY
+alias bigmid   move screenOriginX+screenSizeX/6;screenOriginY 2*screenSizeX/3;screenSizeY
+alias bigright move screenOriginX+screenSizeX/3;screenOriginY 2*screenSizeX/3;screenSizeY
+
+bind 1:${hyper} ${lefthalf}
+bind 2:${hyper} ${righthalf}
+bind 3:${hyper} ${bigleft}
+bind 4:${hyper} ${thirdright}
+bind f:${hyper} ${full}
+bind pad6:${hyper} ${righthalf}
+bind pad7:${hyper} ${thirdleft}
+bind pad8:${hyper} ${thirdmid}
+bind pad9:${hyper} ${thirdright}
+
+bind ;:${hyper}      throw next
+bind delete:${hyper} relaunch
