@@ -25,17 +25,18 @@ Bundle "MarcWeber/vim-addon-mw-utils"
 Bundle "tomtom/tlib_vim"
 Bundle "garbas/vim-snipmate"
 Bundle 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
-Bundle 'bling/vim-airline'
+"Bundle 'bling/vim-airline'
 Bundle 'editorconfig/editorconfig-vim'
 Bundle 'mattn/emmet-vim'
+"Bundle 'Valloric/YouCompleteMe'
 filetype on
 "colorscheme base16-default
 colorscheme Tomorrow-Night-Bright
 set background=dark
 
-"python from powerline.vim import setup as powerline_setup
-"python powerline_setup()
-"python del powerline_setup
+python from powerline.vim import setup as powerline_setup
+python powerline_setup()
+python del powerline_setup
 
 filetype plugin indent on 	"required for vundle
 
@@ -80,16 +81,18 @@ set winwidth=84
 set laststatus=2
 set pastetoggle=<F2>
 
+set showcmd
+
 " Quicker window movement
 nnoremap <C-j> <C-W><C-J>
 nnoremap <C-k> <C-W><C-K>
 nnoremap <C-l> <C-W><C-L>
 nnoremap <C-h> <C-W><C-H>
 
-nnoremap <S-J> :resize -5<CR>
-nnoremap <S-K> :resize +5<CR>
-nnoremap <S-L> :vertical resize +5<CR>
-nnoremap <S-H> :vertical resize -5<CR>
+"nnoremap <S-J> :resize -5<CR>
+"nnoremap <S-K> :resize +5<CR>
+"nnoremap <S-L> :vertical resize +5<CR>
+"nnoremap <S-H> :vertical resize -5<CR>
 " Open new splits bottom and right
 set splitbelow
 set splitright
@@ -114,15 +117,15 @@ imap <S-Tab> <C-o><<
 "hi CursorLine cterm=NONE ctermbg=darkred ctermfg=white
 "highlight LineNr cterm=NONE ctermfg=grey ctermbg=white
 
-"Syntastic Column
-hi SignColumn ctermbg=232
-hi SyntasticErrorSign ctermfg=darkred ctermbg=black
-hi SyntasticWarningSign ctermfg=214 ctermbg=black
-hi SyntasticErrorLine ctermfg=yellow ctermbg=black
-hi clear SyntasticError
-hi clear SyntasticWarning
-hi SyntasticError cterm=underline
-hi SyntasticWarning cterm=underline
+""Syntastic Column
+"hi SignColumn ctermbg=232
+"hi SyntasticErrorSign ctermfg=darkred ctermbg=black
+"hi SyntasticWarningSign ctermfg=214 ctermbg=black
+"hi SyntasticErrorLine ctermfg=yellow ctermbg=black
+"hi clear SyntasticError
+"hi clear SyntasticWarning
+"hi SyntasticError cterm=underline
+"hi SyntasticWarning cterm=underline
 
 hi SpellBad ctermbg=black ctermfg=200
 ":hi TabLineFill ctermfg=LightGreen ctermbg=white
@@ -152,19 +155,7 @@ endif
 
 nmap <leader>v :tabedit $MYVIMRC<CR>
 nmap <leader>z :tabedit ~/.zshrc<CR>
-nmap <leader>zo :tabedit ~/.oh-my-zsh/themes/personal.zsh-theme<CR>
 nmap <silent> <leader>s :set spell!<CR>
 
 " Set region to British English
 set spelllang=en_gb
-let g:airline_powerline_fonts=1
-let g:airline_enable_syntastic = 1
-
-let g:airline_left_sep = ''
-let g:airline_left_alt_sep = ''
-let g:airline_right_sep = ''
-let g:airline_right_alt_sep = ''
-let g:airline_branch_prefix = ' '
-let g:airline_readonly_symbol = ''
-let g:airline_linecolumn_prefix = ' '
-let g:airline_theme = 'powerlineish'
