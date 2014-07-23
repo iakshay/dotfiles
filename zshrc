@@ -41,12 +41,15 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Wiki reference: https://github.com/robbyrussell/oh-my-zsh/wiki/Plugins
-plugins=(git z brew tmux osx vagrant python ruby rvm npm pip gem django) 
+plugins=(git z brew tmux osx vagrant python ruby rvm npm pip gem django tmuxinator) 
+
+bindkey '^[[A' up-line-or-search
+bindkey '^[[B' down-line-or-search
 
 source $ZSH/oh-my-zsh.sh
 
 # Customize to your needs...
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:$HOME/.rvm/bin:$PATH
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:$HOME/.rvm/bin:/usr/local/php5/bin:$PATH
 
 export EDITOR='subl -w'
 export LC_ALL=en_US.UTF-8  

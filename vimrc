@@ -28,6 +28,7 @@ Bundle 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
 "Bundle 'bling/vim-airline'
 Bundle 'editorconfig/editorconfig-vim'
 Bundle 'mattn/emmet-vim'
+Bundle 'wavded/vim-stylus'
 "Bundle 'Valloric/YouCompleteMe'
 filetype on
 "colorscheme base16-default
@@ -159,3 +160,7 @@ nmap <silent> <leader>s :set spell!<CR>
 
 " Set region to British English
 set spelllang=en_gb
+
+" Mouse support
+set mouse=a
+set ttymouse=xterm2
