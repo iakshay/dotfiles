@@ -1,5 +1,5 @@
 function proxy(){
-  INTERFACE="Ethernet"
+  INTERFACE="Wi-Fi"
   TYPE="setsocksfirewallproxystate"
 
   case $1 in

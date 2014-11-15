@@ -55,3 +55,5 @@ export EDITOR='subl -w'
 export LC_ALL=en_US.UTF-8  
 export LANG=en_US.UTF-8
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
+
+#alias vim="reattach-to-user-namespace vim"

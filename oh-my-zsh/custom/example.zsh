@@ -1,13 +1,13 @@
 # functions to switch hosts files, to avoid distractions
-function isolate(){
-	ISOLATION_MODE=true
-	cp /etc/hosts.blocked /etc/hosts
-}
+#function isolate(){
+	#ISOLATION_MODE=true
+	#cp /etc/hosts.blocked /etc/hosts
+#}
 
-function unisolate(){
-	ISOLATION_MODE=false
-	cp /etc/hosts.unblocked /etc/hosts
-}
+#function unisolate(){
+	#ISOLATION_MODE=false
+	#cp /etc/hosts.unblocked /etc/hosts
+#}
 
 function isolate_prompt_info(){
 	if [[ "$ISOLATION_MODE" == "true" ]]
@@ -36,11 +36,24 @@ function md() {
 }
 
 #Todo - Show time since last commit in prompt
-function git_time_since_commit(){
-  #echo $(git log -1 --pretty=format:"%ad" --date="relative")
+#function git_time_since_commit(){
+  ##echo $(git log -1 --pretty=format:"%ad" --date="relative")
+#}
+
+#export isolate_prompt_info
+
+function yt(){
+  url=$(youtube-dl -g -o "[%(title)s.%(ext)s" --cookies=~/cookie.txt "$@")
+  #echo $url
+  aria2c -x16 -k1M -s16 --load-cookies=~/cookie.txt --referer=$@ $url
 }
 
-function imgur {
-  curl -s -F "image=@$1" -F "key=486690f872c678126a2c09a9e196ce1b" https://imgur.com/api/upload.xml | grep -E -o "<original_image>(.)*</original_image>" | grep -E -o "http://i.imgur.com/[^<]*"
+function firebot(){
+  open "https://bugzilla.mozilla.org/show_bug.cgi?id=$@"
 }
-export isolate_prompt_info
+
+function glu(){
+  gcc -framework GLUT -framework OpenGL -framework Cocoa -Wno-deprecated -o "$@" "$@.c" && ./$@
+}
+
+alias cleanpyc=find . -name "*.pyc" | xargs rm -f

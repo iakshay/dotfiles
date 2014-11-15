@@ -7,7 +7,7 @@ call vundle#rc()
 " let Vundle manage Vundle
 " required!
 Bundle 'gmarik/vundle'
-Bundle 'tpope/vim-fugitive'
+"Bundle 'tpope/vim-fugitive'
 Bundle 'Lokaltog/vim-easymotion'
 Bundle 'scrooloose/nerdtree'
 Bundle 'scrooloose/syntastic'
@@ -17,23 +17,36 @@ Bundle 'scrooloose/syntastic'
 "Bundle 'chriskempson/base16-vim'
 Bundle 'scrooloose/nerdcommenter'
 Bundle "kien/ctrlp.vim"
-Bundle "mileszs/ack.vim"
+"Bundle 'mileszs/ack.vim'
 Bundle "tpope/vim-surround"
 Bundle "tpope/vim-markdown"
 "vim-snipmate
-Bundle "MarcWeber/vim-addon-mw-utils"
-Bundle "tomtom/tlib_vim"
-Bundle "garbas/vim-snipmate"
+"Bundle 'MarcWeber/vim-addon-mw-utils'
+"Bundle 'tomtom/tlib_vim'
+"Bundle 'garbas/vim-snipmate'
 Bundle 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
 "Bundle 'bling/vim-airline'
 Bundle 'editorconfig/editorconfig-vim'
 Bundle 'mattn/emmet-vim'
 Bundle 'wavded/vim-stylus'
+"Bundle 'benmills/vimux'
+Bundle 'wikitopian/hardmode'
+"Bundle 'bling/vim-bufferline'
+"Bundle 'tpope/vim-dispatch'
+"Ultisnips
+Bundle 'SirVer/ultisnips'
+Bundle 'altercation/vim-colors-solarized'
+
 "Bundle 'Valloric/YouCompleteMe'
 filetype on
-"colorscheme base16-default
 colorscheme Tomorrow-Night-Bright
 set background=dark
+
+"solarized
+"set background=light
+"colorscheme solarized
+"let g:solarized_termcolors=16
+"hi SignColumn ctermbg=lightgrey guibg=lightgrey
 
 python from powerline.vim import setup as powerline_setup
 python powerline_setup()
@@ -111,7 +124,9 @@ let g:syntastic_check_on_open=1
 let g:syntastic_js_checker='jslint'
 let g:syntastic_error_symbol='✗'
 let g:syntastic_warning_symbol='⚠'
-
+"for solarized
+"hi CursorLineNr ctermbg=red ctermfg=white
+"let g:syntastic_enable_signs=1
 "Shift Tab'
 imap <S-Tab> <C-o><<
 "hi MatchParen cterm=none ctermbg=green ctermfg=blue
@@ -156,7 +171,9 @@ endif
 
 nmap <leader>v :tabedit $MYVIMRC<CR>
 nmap <leader>z :tabedit ~/.zshrc<CR>
+nmap <leader>tm :tabedit ~/.tmux.conf<CR>
 nmap <silent> <leader>s :set spell!<CR>
+nmap <silent> <leader>r :w<CR> :call VimuxRunCommand('g++ ' .  bufname('%') .' && ./a.out')<CR>
 
 " Set region to British English
 set spelllang=en_gb
@@ -164,3 +181,27 @@ set spelllang=en_gb
 " Mouse support
 set mouse=a
 set ttymouse=xterm2
+set hlsearch
+
+"autocmd VimEnter,BufNewFile,BufReadPost * silent! call HardMode()
+"nnoremap <leader>h <Esc>:call ToggleHardMode()<CR>
+"set clipboard=unnamed
+
+" Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
+let g:UltiSnipsExpandTrigger="<tab>"
+let g:UltiSnipsListSnippets="<c-tab>"
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+
+" If you want :UltiSnipsEdit to split your window.
+"let g:UltiSnipsEditSplit="vertical"
+
+"for buffers
+nnoremap <silent><leader>b :CtrlPBuffer<CR>
+
+"Ack
+let g:ackprg = 'ag --nogroup --nocolor --column'
+
+"latex
+"au Filetype tex set makeprg=latexmk\ %
+"autocmd BufWritePost *.tex echom system("pdflatex % &&  open -g -a Preview %:r.pdf")
