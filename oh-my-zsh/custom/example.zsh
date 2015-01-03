@@ -57,3 +57,9 @@ function glu(){
 }
 
 alias cleanpyc=find . -name "*.pyc" | xargs rm -f
+
+function lman(){
+  man -M ~/manpages/linux/ "$@"
+}
+
+alias matlab="/Applications/MATLAB_R2014a.app/bin/matlab -nodisplay -nodesktop"

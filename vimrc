@@ -7,37 +7,32 @@ call vundle#rc()
 " let Vundle manage Vundle
 " required!
 Bundle 'gmarik/vundle'
-"Bundle 'tpope/vim-fugitive'
+Bundle 'tpope/vim-fugitive'
 Bundle 'Lokaltog/vim-easymotion'
 Bundle 'scrooloose/nerdtree'
 Bundle 'scrooloose/syntastic'
-"Bundle 'daylerees/colour-schemes', { 'rtp': 'vim-themes/' }
-"Bundle 'croaky/vim-colors-github'
-"Bundle 'chriskempson/base16-vim'
-"Bundle 'chriskempson/base16-vim'
 Bundle 'scrooloose/nerdcommenter'
 Bundle "kien/ctrlp.vim"
 "Bundle 'mileszs/ack.vim'
 Bundle "tpope/vim-surround"
-Bundle "tpope/vim-markdown"
-"vim-snipmate
-"Bundle 'MarcWeber/vim-addon-mw-utils'
-"Bundle 'tomtom/tlib_vim'
-"Bundle 'garbas/vim-snipmate'
+
 Bundle 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
-"Bundle 'bling/vim-airline'
 Bundle 'editorconfig/editorconfig-vim'
 Bundle 'mattn/emmet-vim'
+Bundle "tpope/vim-markdown"
 Bundle 'wavded/vim-stylus'
-"Bundle 'benmills/vimux'
+Bundle 'wting/rust.vim'
+
 Bundle 'wikitopian/hardmode'
-"Bundle 'bling/vim-bufferline'
-"Bundle 'tpope/vim-dispatch'
+Bundle 'tpope/vim-dispatch'
+Bundle 'sjl/gundo.vim'
 "Ultisnips
 Bundle 'SirVer/ultisnips'
-Bundle 'altercation/vim-colors-solarized'
-
+Bundle 'godlygeek/tabular'
 "Bundle 'Valloric/YouCompleteMe'
+Bundle 'tpope/vim-eunuch'
+Bundle 'tpope/vim-unimpaired'
+Bundle 'tpope/vim-scriptease'
 filetype on
 colorscheme Tomorrow-Night-Bright
 set background=dark
@@ -72,13 +67,11 @@ set cursorline
 "set hlsearch
 set ignorecase
 set incsearch
-
+set title
 set list
-set listchars=tab:▸\ ,eol:¬,nbsp:⋅
+set listchars=tab:▸\ ,eol:¬,nbsp:⋅,extends:❯,precedes:❮
 
 set noswapfile
-set shell=/bin/sh
-set showmatch
 set smartcase
 
 " Softtabs, 2 spaces
@@ -93,9 +86,123 @@ set winheight=5
 set winminheight=5
 set winwidth=84
 set laststatus=2
-set pastetoggle=<F2>
+set splitbelow
+set splitright
 
 set showcmd
+
+"folding settings
+"set foldmethod=indent   "fold based on indent
+"set foldnestmax=10      "deepest fold is 10 levels
+"set nofoldenable        "dont fold by default
+"set foldlevel=1         "this is just what i use
+
+set history=1000
+set undofile
+set undoreload=10000
+
+
+" }}}
+" Wildmenu completion {{{
+
+set wildmenu
+set wildmode=list:longest
+
+set wildignore+=.hg,.git,.svn                    " Version control
+set wildignore+=*.aux,*.out,*.toc                " LaTeX intermediate files
+set wildignore+=*.jpg,*.bmp,*.gif,*.png,*.jpeg   " binary images
+set wildignore+=*.o,*.obj,*.exe,*.dll,*.manifest " compiled object files
+set wildignore+=*.spl                            " compiled spelling word lists
+set wildignore+=*.sw?                            " Vim swap files
+set wildignore+=*.DS_Store                       " OSX bullshit
+
+set wildignore+=*.luac                           " Lua byte code
+
+set wildignore+=migrations                       " Django migrations
+set wildignore+=*.pyc                            " Python byte code
+
+set wildignore+=*.orig                           " Merge resolution files
+
+" }}}
+" Convenience mappings ---------------------------------------------------- {{{
+
+" Fuck you, help key.
+noremap  <F1> :checktime<cr>
+inoremap <F1> <esc>:checktime<cr>
+
+" Clean trailing whitespace
+nnoremap <leader>ww mz:%s/\s\+$//<cr>:let @/=''<cr>`z
+
+" Stop it, hash key.
+inoremap # X<BS>#
+
+" Kill window
+nnoremap K :q<cr>
+
+" Man
+nnoremap M K
+
+" Toggle line numbers
+nnoremap <leader>n :setlocal number!<cr>
+
+" Sort lines
+nnoremap <leader>s vip:!sort<cr>
+vnoremap <leader>s :!sort<cr>
+
+" Tabs
+nnoremap <leader>( :tabprev<cr>
+nnoremap <leader>) :tabnext<cr>
+
+" Wrap
+nnoremap <leader>W :set wrap!<cr>
+
+"searching and movement
+noremap <silent> <leader><space> :noh<cr>:call clearmatches()<cr>
+
+" Made D behave
+nnoremap D d$
+
+" Keep search matches in the middle of the window.
+nnoremap n nzzzv
+nnoremap N Nzzzv
+
+" Same when jumping around
+nnoremap g; g;zz
+nnoremap g, g,zz
+nnoremap <c-o> <c-o>zz
+
+" Easier to type, and I never use the default behavior.
+noremap H ^
+noremap L $
+vnoremap L g_
+
+"upper case
+nnoremap <C-u> gUiw
+inoremap <C-u> <esc>gUiwea
+
+" Split line (sister to [J]oin lines)
+" The normal use of S is covered by cc, so don't worry about shadowing it.
+nnoremap S i<cr><esc>^mwgk:silent! s/\v +$//<cr>:noh<cr>`w
+
+" Source
+vnoremap <leader>S y:@"<CR>
+nnoremap <leader>S ^vg_y:execute @@<cr>:echo 'Sourced line.'<cr>
+
+" Indent Guides {{{
+
+let g:indentguides_state = 0
+function! IndentGuides() " {{{
+    if g:indentguides_state
+        let g:indentguides_state = 0
+        2match None
+    else
+        let g:indentguides_state = 1
+        execute '2match IndentGuides /\%(\_^\s*\)\@<=\%(\%'.(0*&sw+1).'v\|\%'.(1*&sw+1).'v\|\%'.(2*&sw+1).'v\|\%'.(3*&sw+1).'v\|\%'.(4*&sw+1).'v\|\%'.(5*&sw+1).'v\|\%'.(6*&sw+1).'v\|\%'.(7*&sw+1).'v\)\s/'
+    endif
+endfunction " }}}
+hi def IndentGuides guibg=#303030 ctermbg=234
+nnoremap <leader>I :call IndentGuides()<cr>
+
 
 " Quicker window movement
 nnoremap <C-j> <C-W><C-J>
@@ -108,8 +215,6 @@ nnoremap <C-h> <C-W><C-H>
 "nnoremap <S-L> :vertical resize +5<CR>
 "nnoremap <S-H> :vertical resize -5<CR>
 " Open new splits bottom and right
-set splitbelow
-set splitright
 
 "Save with sudo permission, do w!!
 cmap w!! %!sudo tee > /dev/null %
@@ -148,11 +253,6 @@ hi SpellBad ctermbg=black ctermfg=200
 ":hi TabLine ctermfg=yellow ctermbg=gray
 ":hi TabLineSel ctermfg=Red ctermbg=Yellow
 
-"folding settings
-set foldmethod=indent   "fold based on indent
-set foldnestmax=10      "deepest fold is 10 levels
-set nofoldenable        "dont fold by default
-set foldlevel=1         "this is just what i use
 
 function! ToggleErrors()
   let old_last_winnr = winnr('$')
@@ -173,7 +273,6 @@ nmap <leader>v :tabedit $MYVIMRC<CR>
 nmap <leader>z :tabedit ~/.zshrc<CR>
 nmap <leader>tm :tabedit ~/.tmux.conf<CR>
 nmap <silent> <leader>s :set spell!<CR>
-nmap <silent> <leader>r :w<CR> :call VimuxRunCommand('g++ ' .  bufname('%') .' && ./a.out')<CR>
 
 " Set region to British English
 set spelllang=en_gb
@@ -183,10 +282,9 @@ set mouse=a
 set ttymouse=xterm2
 set hlsearch
 
-"autocmd VimEnter,BufNewFile,BufReadPost * silent! call HardMode()
-"nnoremap <leader>h <Esc>:call ToggleHardMode()<CR>
-"set clipboard=unnamed
-
+let g:HardMode_level = "wannabe"
+autocmd VimEnter,BufNewFile,BufReadPost * silent! call HardMode()
+nnoremap <leader>h <Esc>:call ToggleHardMode()<CR>
 " Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
 let g:UltiSnipsExpandTrigger="<tab>"
 let g:UltiSnipsListSnippets="<c-tab>"
@@ -205,3 +303,21 @@ let g:ackprg = 'ag --nogroup --nocolor --column'
 "latex
 "au Filetype tex set makeprg=latexmk\ %
 "autocmd BufWritePost *.tex echom system("pdflatex % &&  open -g -a Preview %:r.pdf")
+
+"Gundo
+nnoremap <leader>g :GundoToggle<CR>
+" Indent Guides {{{
+
+let g:indentguides_state = 0
+function! IndentGuides() " {{{
+    if g:indentguides_state
+        let g:indentguides_state = 0
+        2match None
+    else
+        let g:indentguides_state = 1
+        execute '2match IndentGuides /\%(\_^\s*\)\@<=\%(\%'.(0*&sw+1).'v\|\%'.(1*&sw+1).'v\|\%'.(2*&sw+1).'v\|\%'.(3*&sw+1).'v\|\%'.(4*&sw+1).'v\|\%'.(5*&sw+1).'v\|\%'.(6*&sw+1).'v\|\%'.(7*&sw+1).'v\)\s/'
+    endif
+endfunction " }}}
+hi def IndentGuides guibg=#303030 ctermbg=234
+nnoremap <leader>I :call IndentGuides()<cr>
+
