@@ -8,7 +8,7 @@
 		"gutter_theme_excludes":
 		[
 		],
-		"lint_mode": "background",
+		"lint_mode": "manual",
 		"linters":
 		{
 			"pep8":
@@ -27,6 +27,7 @@
 		},
 		"mark_style": "solid underline",
 		"no_column_highlights_line": false,
+		"passive_warnings": false,
 		"paths":
 		{
 			"linux":
