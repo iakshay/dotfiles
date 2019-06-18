@@ -4,6 +4,11 @@ filetype off                   " required!
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#rc()
 
+"vim needs a more POSIX compatible shell than fish
+if &shell =~# 'fish$'
+    set shell=bash
+endif
+
 " let Vundle manage Vundle
 " required!
 Plugin 'VundleVim/Vundle.vim'
@@ -17,24 +22,17 @@ Plugin 'mileszs/ack.vim'
 Plugin 'tpope/vim-surround'
 Plugin 'majutsushi/tagbar'
 Plugin 'itchyny/lightline.vim'
-"Plugin 'vim-scripts/cscope.vim'
-Plugin 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
-Plugin 'editorconfig/editorconfig-vim'
-"Plugin 'mattn/emmet-vim'
+"Plugin 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
+Plugin 'altercation/vim-colors-solarized'
 Plugin 'tpope/vim-markdown'
-"Plugin 'wavded/vim-stylus'
 "Plugin 'wting/rust.vim'
 Plugin 'gnattishness/cscope_maps'
 Plugin 'universal-ctags/ctags'
 "Plugin 'wikitopian/hardmode'
 "Plugin 'fatih/vim-go'
 filetype on
-colorscheme Tomorrow-Night-Bright
-set background=dark
-
-" python from powerline.vim import setup as powerline_setup
-" python powerline_setup()
-" python del powerline_setup
+colorscheme solarized
+set background=light
 
 filetype plugin indent on 	"required for vundle
 
@@ -58,7 +56,7 @@ set listchars=tab:▸\ ,eol:¬,nbsp:⋅,extends:❯,precedes:❮
 set noswapfile
 set smartcase
 
-" Softtabs, 2 spaces
+" Softtabs, 3 spaces
 set tabstop=2
 set shiftwidth=2
 set softtabstop=2
@@ -161,10 +159,10 @@ let g:nerdtree_tabs_open_on_gui_startup=0
 let g:nerdtree_tabs_autoclose=1
 
 "Syntastic
-let g:syntastic_check_on_open=0
-let g:syntastic_js_checker='jslint'
-let g:syntastic_error_symbol='✗'
-let g:syntastic_warning_symbol='⚠'
+"let g:syntastic_check_on_open=0
+"let g:syntastic_js_checker='jslint'
+"let g:syntastic_error_symbol='✗'
+"let g:syntastic_warning_symbol='⚠'
 "for solarized
 "hi CursorLineNr ctermbg=red ctermfg=white
 "let g:syntastic_enable_signs=1
@@ -214,49 +212,6 @@ nmap <leader>s :TagbarToggle<CR>
 "Ack
 let g:ackprg = 'ag --nogroup --nocolor --column'
 
-"latex
-"au Filetype tex set makeprg=latexmk\ %
-"autocmd BufWritePost *.tex echom system("pdflatex % &&  open -g -a Preview %:r.pdf")
-
-"Gundo
-"nnoremap <leader>g :GundoToggle<CR>
-"nnoremap <leader>I :call IndentGuides()<cr>
-
-
-""go
-"let g:go_fmt_command = "goimports"
-
-"let g:syntastic_cpp_compiler = 'clang++'
-"let g:syntastic_cpp_compiler_options = ' -std=c++14 -stdlib=libc++'
-"set tags=tags
-
-"if executable('cquery')
-   "au User lsp_setup call lsp#register_server({
-      "\ 'name': 'cquery',
-      "\ 'cmd': {server_info->['cquery']},
-      "\ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
-      "\ 'initialization_options': { 'cacheDirectory': '/tmp/cquery/cache' },
-      "\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
-      "\ })
-"endif
-"if executable('clangd-6.0')
-    "augroup lsp_clangd
-        "autocmd!
-        "autocmd User lsp_setup call lsp#register_server({
-                    "\ 'name': 'clangd-6.0',
-                    "\ 'cmd': {server_info->['clangd']},
-                    "\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
-                    "\ })
-    "augroup end
-"endif
-
-"let g:lsc_auto_map = v:true " Use defaults
-"let g:lsc_server_commands = {
-  "\ 'c': 'cquery --init="{\"cacheDirectory\": \"/tmp/cquery_cache\"}"',
-  "\ 'cpp': 'cquery --init="{\"cacheDirectory\": \"/tmp/cquery_cache\"}"',
-  "\ }
-"let g:lsp_log_verbose = 1
-"let g:lsp_log_file = expand('~/vim-lsp.log')
 cnoreabbrev Ack Ack!
 nnoremap <Leader>a :Ack!<Space>
 let g:ale_fixers = {'cpp': ['clang-format']}
@@ -270,6 +225,9 @@ nmap <Leader>r :Tags<CR>
 
 nmap \r :!tmux send-keys -t right C-p C-j <CR><CR>
 nmap \h :!tmux send-keys -t right C-p C-j <CR><CR>
+
+" copy to host clipboard
+" https://sunaku.github.io/tmux-yank-osc52.html#osc-52-the-new-way
 function! Yank(text) abort
   let escape = system('yank', a:text)
   if v:shell_error
