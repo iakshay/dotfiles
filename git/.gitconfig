@@ -1,0 +1,13 @@
+[user]
+  name = Akshay Aurora
+  email = akshayaurora@yahoo.com
+
+[core]
+  editor = vim
+  excludesfile = ~/.gitignore
+
+[color]
+  ui = true
+
+[push]
+  default = simple	

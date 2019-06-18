@@ -1,51 +1,40 @@
 set nocompatible               " be iMproved
 filetype off                   " required!
 
-set rtp+=~/.vim/bundle/vundle/
+set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#rc()
 
 " let Vundle manage Vundle
 " required!
-Bundle 'gmarik/vundle'
-Bundle 'tpope/vim-fugitive'
-Bundle 'Lokaltog/vim-easymotion'
-Bundle 'scrooloose/nerdtree'
-Bundle 'scrooloose/syntastic'
-Bundle 'scrooloose/nerdcommenter'
-Bundle "kien/ctrlp.vim"
-"Bundle 'mileszs/ack.vim'
-Bundle "tpope/vim-surround"
-
-Bundle 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
-Bundle 'editorconfig/editorconfig-vim'
-Bundle 'mattn/emmet-vim'
-Bundle "tpope/vim-markdown"
-Bundle 'wavded/vim-stylus'
-Bundle 'wting/rust.vim'
-
-Bundle 'wikitopian/hardmode'
-Bundle 'tpope/vim-dispatch'
-Bundle 'sjl/gundo.vim'
-"Ultisnips
-Bundle 'SirVer/ultisnips'
-Bundle 'godlygeek/tabular'
-"Bundle 'Valloric/YouCompleteMe'
-Bundle 'tpope/vim-eunuch'
-Bundle 'tpope/vim-unimpaired'
-Bundle 'tpope/vim-scriptease'
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'w0rp/ale'
+Plugin 'Lokaltog/vim-easymotion'
+Plugin 'scrooloose/nerdtree'
+Plugin 'scrooloose/nerdcommenter'
+Plugin 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plugin 'junegunn/fzf.vim'
+Plugin 'mileszs/ack.vim'
+Plugin 'tpope/vim-surround'
+Plugin 'majutsushi/tagbar'
+Plugin 'itchyny/lightline.vim'
+"Plugin 'vim-scripts/cscope.vim'
+Plugin 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
+Plugin 'editorconfig/editorconfig-vim'
+"Plugin 'mattn/emmet-vim'
+Plugin 'tpope/vim-markdown'
+"Plugin 'wavded/vim-stylus'
+"Plugin 'wting/rust.vim'
+Plugin 'gnattishness/cscope_maps'
+Plugin 'universal-ctags/ctags'
+"Plugin 'wikitopian/hardmode'
+"Plugin 'fatih/vim-go'
 filetype on
 colorscheme Tomorrow-Night-Bright
 set background=dark
 
-"solarized
-"set background=light
-"colorscheme solarized
-"let g:solarized_termcolors=16
-"hi SignColumn ctermbg=lightgrey guibg=lightgrey
-
-python from powerline.vim import setup as powerline_setup
-python powerline_setup()
-python del powerline_setup
+" python from powerline.vim import setup as powerline_setup
+" python powerline_setup()
+" python del powerline_setup
 
 filetype plugin indent on 	"required for vundle
 
@@ -60,11 +49,6 @@ set smartindent
 set backspace=indent,eol,start
 "set colorcolumn=80
 set cursorline
-"set gdefault
-"set guifont=Source\ Code\ Pro\ for\ Powerline
-"set guioptions-=Be
-"set guioptions=aAc
-"set hlsearch
 set ignorecase
 set incsearch
 set title
@@ -98,9 +82,15 @@ set showcmd
 "set foldlevel=1         "this is just what i use
 
 set history=1000
-set undofile
 set undoreload=10000
 
+" Set region to British English
+set spelllang=en_gb
+
+" Mouse support
+set mouse=a
+"set ttymouse=xterm2
+set hlsearch
 
 " }}}
 " Wildmenu completion {{{
@@ -108,7 +98,7 @@ set undoreload=10000
 set wildmenu
 set wildmode=list:longest
 
-set wildignore+=.hg,.git,.svn                    " Version control
+set wildignore+=.hg,.git,.svn,build             " Version control
 set wildignore+=*.aux,*.out,*.toc                " LaTeX intermediate files
 set wildignore+=*.jpg,*.bmp,*.gif,*.png,*.jpeg   " binary images
 set wildignore+=*.o,*.obj,*.exe,*.dll,*.manifest " compiled object files
@@ -123,44 +113,12 @@ set wildignore+=*.pyc                            " Python byte code
 
 set wildignore+=*.orig                           " Merge resolution files
 
-" }}}
-" Convenience mappings ---------------------------------------------------- {{{
-
-" Fuck you, help key.
-noremap  <F1> :checktime<cr>
-inoremap <F1> <esc>:checktime<cr>
-
-" Clean trailing whitespace
-nnoremap <leader>ww mz:%s/\s\+$//<cr>:let @/=''<cr>`z
-
-" Stop it, hash key.
-inoremap # X<BS>#
-
-" Kill window
-nnoremap K :q<cr>
-
-" Man
-nnoremap M K
-
-" Toggle line numbers
-nnoremap <leader>n :setlocal number!<cr>
-
-" Sort lines
-nnoremap <leader>s vip:!sort<cr>
-vnoremap <leader>s :!sort<cr>
-
-" Tabs
-nnoremap <leader>( :tabprev<cr>
-nnoremap <leader>) :tabnext<cr>
-
-" Wrap
-nnoremap <leader>W :set wrap!<cr>
 
 "searching and movement
 noremap <silent> <leader><space> :noh<cr>:call clearmatches()<cr>
 
 " Made D behave
-nnoremap D d$
+" nnoremap D d$
 
 " Keep search matches in the middle of the window.
 nnoremap n nzzzv
@@ -172,9 +130,9 @@ nnoremap g, g,zz
 nnoremap <c-o> <c-o>zz
 
 " Easier to type, and I never use the default behavior.
-noremap H ^
-noremap L $
-vnoremap L g_
+"noremap H ^
+"noremap L $
+"vnoremap L g_
 
 "upper case
 nnoremap <C-u> gUiw
@@ -188,33 +146,11 @@ nnoremap S i<cr><esc>^mwgk:silent! s/\v +$//<cr>:noh<cr>`w
 vnoremap <leader>S y:@"<CR>
 nnoremap <leader>S ^vg_y:execute @@<cr>:echo 'Sourced line.'<cr>
 
-" Indent Guides {{{
-
-let g:indentguides_state = 0
-function! IndentGuides() " {{{
-    if g:indentguides_state
-        let g:indentguides_state = 0
-        2match None
-    else
-        let g:indentguides_state = 1
-        execute '2match IndentGuides /\%(\_^\s*\)\@<=\%(\%'.(0*&sw+1).'v\|\%'.(1*&sw+1).'v\|\%'.(2*&sw+1).'v\|\%'.(3*&sw+1).'v\|\%'.(4*&sw+1).'v\|\%'.(5*&sw+1).'v\|\%'.(6*&sw+1).'v\|\%'.(7*&sw+1).'v\)\s/'
-    endif
-endfunction " }}}
-hi def IndentGuides guibg=#303030 ctermbg=234
-nnoremap <leader>I :call IndentGuides()<cr>
-
-
 " Quicker window movement
 nnoremap <C-j> <C-W><C-J>
 nnoremap <C-k> <C-W><C-K>
 nnoremap <C-l> <C-W><C-L>
 nnoremap <C-h> <C-W><C-H>
-
-"nnoremap <S-J> :resize -5<CR>
-"nnoremap <S-K> :resize +5<CR>
-"nnoremap <S-L> :vertical resize +5<CR>
-"nnoremap <S-H> :vertical resize -5<CR>
-" Open new splits bottom and right
 
 "Save with sudo permission, do w!!
 cmap w!! %!sudo tee > /dev/null %
@@ -225,7 +161,7 @@ let g:nerdtree_tabs_open_on_gui_startup=0
 let g:nerdtree_tabs_autoclose=1
 
 "Syntastic
-let g:syntastic_check_on_open=1
+let g:syntastic_check_on_open=0
 let g:syntastic_js_checker='jslint'
 let g:syntastic_error_symbol='✗'
 let g:syntastic_warning_symbol='⚠'
@@ -234,24 +170,8 @@ let g:syntastic_warning_symbol='⚠'
 "let g:syntastic_enable_signs=1
 "Shift Tab'
 imap <S-Tab> <C-o><<
-"hi MatchParen cterm=none ctermbg=green ctermfg=blue
-"hi CursorLine cterm=NONE ctermbg=darkred ctermfg=white
-"highlight LineNr cterm=NONE ctermfg=grey ctermbg=white
-
-""Syntastic Column
-"hi SignColumn ctermbg=232
-"hi SyntasticErrorSign ctermfg=darkred ctermbg=black
-"hi SyntasticWarningSign ctermfg=214 ctermbg=black
-"hi SyntasticErrorLine ctermfg=yellow ctermbg=black
-"hi clear SyntasticError
-"hi clear SyntasticWarning
-"hi SyntasticError cterm=underline
-"hi SyntasticWarning cterm=underline
 
 hi SpellBad ctermbg=black ctermfg=200
-":hi TabLineFill ctermfg=LightGreen ctermbg=white
-":hi TabLine ctermfg=yellow ctermbg=gray
-":hi TabLineSel ctermfg=Red ctermbg=Yellow
 
 
 function! ToggleErrors()
@@ -274,16 +194,10 @@ nmap <leader>z :tabedit ~/.zshrc<CR>
 nmap <leader>tm :tabedit ~/.tmux.conf<CR>
 nmap <silent> <leader>s :set spell!<CR>
 
-" Set region to British English
-set spelllang=en_gb
 
-" Mouse support
-set mouse=a
-set ttymouse=xterm2
-set hlsearch
 
 let g:HardMode_level = "wannabe"
-autocmd VimEnter,BufNewFile,BufReadPost * silent! call HardMode()
+"autocmd VimEnter,BufNewFile,BufReadPost * silent! call HardMode()
 nnoremap <leader>h <Esc>:call ToggleHardMode()<CR>
 " Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
 let g:UltiSnipsExpandTrigger="<tab>"
@@ -296,7 +210,7 @@ let g:UltiSnipsJumpBackwardTrigger="<c-z>"
 
 "for buffers
 nnoremap <silent><leader>b :CtrlPBuffer<CR>
-
+nmap <leader>s :TagbarToggle<CR>
 "Ack
 let g:ackprg = 'ag --nogroup --nocolor --column'
 
@@ -305,19 +219,63 @@ let g:ackprg = 'ag --nogroup --nocolor --column'
 "autocmd BufWritePost *.tex echom system("pdflatex % &&  open -g -a Preview %:r.pdf")
 
 "Gundo
-nnoremap <leader>g :GundoToggle<CR>
-" Indent Guides {{{
+"nnoremap <leader>g :GundoToggle<CR>
+"nnoremap <leader>I :call IndentGuides()<cr>
 
-let g:indentguides_state = 0
-function! IndentGuides() " {{{
-    if g:indentguides_state
-        let g:indentguides_state = 0
-        2match None
-    else
-        let g:indentguides_state = 1
-        execute '2match IndentGuides /\%(\_^\s*\)\@<=\%(\%'.(0*&sw+1).'v\|\%'.(1*&sw+1).'v\|\%'.(2*&sw+1).'v\|\%'.(3*&sw+1).'v\|\%'.(4*&sw+1).'v\|\%'.(5*&sw+1).'v\|\%'.(6*&sw+1).'v\|\%'.(7*&sw+1).'v\)\s/'
-    endif
-endfunction " }}}
-hi def IndentGuides guibg=#303030 ctermbg=234
-nnoremap <leader>I :call IndentGuides()<cr>
 
+""go
+"let g:go_fmt_command = "goimports"
+
+"let g:syntastic_cpp_compiler = 'clang++'
+"let g:syntastic_cpp_compiler_options = ' -std=c++14 -stdlib=libc++'
+"set tags=tags
+
+"if executable('cquery')
+   "au User lsp_setup call lsp#register_server({
+      "\ 'name': 'cquery',
+      "\ 'cmd': {server_info->['cquery']},
+      "\ 'root_uri': {server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'compile_commands.json'))},
+      "\ 'initialization_options': { 'cacheDirectory': '/tmp/cquery/cache' },
+      "\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
+      "\ })
+"endif
+"if executable('clangd-6.0')
+    "augroup lsp_clangd
+        "autocmd!
+        "autocmd User lsp_setup call lsp#register_server({
+                    "\ 'name': 'clangd-6.0',
+                    "\ 'cmd': {server_info->['clangd']},
+                    "\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
+                    "\ })
+    "augroup end
+"endif
+
+"let g:lsc_auto_map = v:true " Use defaults
+"let g:lsc_server_commands = {
+  "\ 'c': 'cquery --init="{\"cacheDirectory\": \"/tmp/cquery_cache\"}"',
+  "\ 'cpp': 'cquery --init="{\"cacheDirectory\": \"/tmp/cquery_cache\"}"',
+  "\ }
+"let g:lsp_log_verbose = 1
+"let g:lsp_log_file = expand('~/vim-lsp.log')
+cnoreabbrev Ack Ack!
+nnoremap <Leader>a :Ack!<Space>
+let g:ale_fixers = {'cpp': ['clang-format']}
+let g:ale_fix_on_save = 1
+let g:ale_linters = {}
+let g:ale_linters_explicit = 1
+
+nmap ; :Buffers<CR>
+nmap <Leader>t :Files<CR>
+nmap <Leader>r :Tags<CR>
+
+nmap \r :!tmux send-keys -t right C-p C-j <CR><CR>
+nmap \h :!tmux send-keys -t right C-p C-j <CR><CR>
+function! Yank(text) abort
+  let escape = system('yank', a:text)
+  if v:shell_error
+    echoerr escape
+  else
+    call writefile([escape], '/dev/tty', 'b')
+  endif
+endfunction
+noremap <silent> <Leader>y y:<C-U>call Yank(@0)<CR>
