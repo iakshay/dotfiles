@@ -1,22 +1,19 @@
 set nocompatible               " be iMproved
 filetype off                   " required!
 
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#rc()
-
 "vim needs a more POSIX compatible shell than fish
 if &shell =~# 'fish$'
     set shell=bash
 endif
 
 " automatically install and use vim-plug
-if empty(glob('~/.vim/autoload/plug.vim'))
-  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+if empty(glob('~/.config/nvim/autoload/plug.vim'))
+  silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
     \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
-call plug#begin('~/.vim/plugged')
+call plug#begin('~/.config/nvim/plugged')
 
 " required!
 Plug 'w0rp/ale'
@@ -31,14 +28,18 @@ Plug 'majutsushi/tagbar'
 Plug 'itchyny/lightline.vim'
 "Plug 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
 Plug 'altercation/vim-colors-solarized'
-Plug 'tpope/vim-markdown'
-"Plug 'wting/rust.vim'
-Plug 'gnattishness/cscope_maps'
+"Plug 'gnattishness/cscope_maps'
 Plug 'universal-ctags/ctags'
 "Plug 'wikitopian/hardmode'
+
+Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': { -> coc#util#install()}}        " LSP client + autocompletion plugin
+
+" language support
+Plug 'tpope/vim-markdown'
+"Plug 'wting/rust.vim'
 "Plug 'fatih/vim-go'
 Plug 'derekwyatt/vim-scala'
-Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': { -> coc#util#install()}}        " LSP client + autocompletion plugin
+call plug#end()
 
 "Configuration for vim-scala
 au BufRead,BufNewFile *.sbt set filetype=scala
@@ -196,15 +197,13 @@ map <silent> <C-e> :call ToggleErrors()<CR>
 
 "Source the vimrc file after saving it
 if has("autocmd")
-  autocmd bufwritepost .vimrc source $MYVIMRC
+  autocmd bufwritepost $VIMRC source $MYVIMRC
 endif
 
 nmap <leader>v :tabedit $MYVIMRC<CR>
 nmap <leader>z :tabedit ~/.zshrc<CR>
 nmap <leader>tm :tabedit ~/.tmux.conf<CR>
 nmap <silent> <leader>s :set spell!<CR>
-
-
 
 let g:HardMode_level = "wannabe"
 "autocmd VimEnter,BufNewFile,BufReadPost * silent! call HardMode()
