@@ -26,8 +26,7 @@ Plug 'mileszs/ack.vim'
 Plug 'tpope/vim-surround'
 Plug 'majutsushi/tagbar'
 Plug 'itchyny/lightline.vim'
-"Plug 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
-Plug 'altercation/vim-colors-solarized'
+Plug 'lifepillar/vim-solarized8'
 "Plug 'gnattishness/cscope_maps'
 Plug 'universal-ctags/ctags'
 "Plug 'wikitopian/hardmode'
@@ -43,9 +42,9 @@ call plug#end()
 
 "Configuration for vim-scala
 au BufRead,BufNewFile *.sbt set filetype=scala
-
-colorscheme solarized
-set background=light
+set termguicolors
+colorscheme solarized8_flat
+set background=dark
 
 filetype plugin indent on 	"required for vundle
 
