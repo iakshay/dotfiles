@@ -1,1 +1,5 @@
 .DS_Store
+neovim/.config/nvim/.netrwhist
+neovim/.config/nvim/autoload/
+neovim/.config/nvim/plugged/
+
