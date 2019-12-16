@@ -9,28 +9,40 @@ if &shell =~# 'fish$'
     set shell=bash
 endif
 
-" let Vundle manage Vundle
+" automatically install and use vim-plug
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+call plug#begin('~/.vim/plugged')
+
 " required!
-Plugin 'VundleVim/Vundle.vim'
-Plugin 'w0rp/ale'
-Plugin 'Lokaltog/vim-easymotion'
-Plugin 'scrooloose/nerdtree'
-Plugin 'scrooloose/nerdcommenter'
-Plugin 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-Plugin 'junegunn/fzf.vim'
-Plugin 'mileszs/ack.vim'
-Plugin 'tpope/vim-surround'
-Plugin 'majutsushi/tagbar'
-Plugin 'itchyny/lightline.vim'
-"Plugin 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
-Plugin 'altercation/vim-colors-solarized'
-Plugin 'tpope/vim-markdown'
-"Plugin 'wting/rust.vim'
-Plugin 'gnattishness/cscope_maps'
-Plugin 'universal-ctags/ctags'
-"Plugin 'wikitopian/hardmode'
-"Plugin 'fatih/vim-go'
-filetype on
+Plug 'w0rp/ale'
+Plug 'Lokaltog/vim-easymotion'
+Plug 'scrooloose/nerdtree'
+Plug 'scrooloose/nerdcommenter'
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
+Plug 'mileszs/ack.vim'
+Plug 'tpope/vim-surround'
+Plug 'majutsushi/tagbar'
+Plug 'itchyny/lightline.vim'
+"Plug 'chriskempson/tomorrow-theme', {'rtp': 'vim/'}
+Plug 'altercation/vim-colors-solarized'
+Plug 'tpope/vim-markdown'
+"Plug 'wting/rust.vim'
+Plug 'gnattishness/cscope_maps'
+Plug 'universal-ctags/ctags'
+"Plug 'wikitopian/hardmode'
+"Plug 'fatih/vim-go'
+Plug 'derekwyatt/vim-scala'
+Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': { -> coc#util#install()}}        " LSP client + autocompletion plugin
+
+"Configuration for vim-scala
+au BufRead,BufNewFile *.sbt set filetype=scala
+
 colorscheme solarized
 set background=light
 
@@ -256,3 +268,87 @@ function! <SID>StripTrailingWhitespace()
     call cursor(l, c)
 endfunction
 nmap <silent> <Leader><space> :call <SID>StripTrailingWhitespace()<CR>
+
+" Configuration for coc.nvim
+
+" Smaller updatetime for CursorHold & CursorHoldI
+set updatetime=300
+
+" don't give |ins-completion-menu| messages.
+set shortmess+=c
+
+" always show signcolumns
+set signcolumn=yes
+
+" Some server have issues with backup files, see #649
+set nobackup
+set nowritebackup
+
+" Better display for messages
+set cmdheight=2
+
+" Use <c-space> for trigger completion.
+inoremap <silent><expr> <c-space> coc#refresh()
+
+" Use <cr> for confirm completion, `<C-g>u` means break undo chain at current position.
+" Coc only does snippet and additional edit on confirm.
+inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+
+" Use `[c` and `]c` for navigate diagnostics
+nmap <silent> [c <Plug>(coc-diagnostic-prev)
+nmap <silent> ]c <Plug>(coc-diagnostic-next)
+
+" Remap keys for gotos
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Remap for do codeAction of current line
+nmap <leader>ac <Plug>(coc-codeaction)
+
+" Remap for do action format
+nnoremap <silent> F :call CocAction('format')<CR>
+
+" Use K for show documentation in preview window
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if &filetype == 'vim'
+    execute 'h '.expand('<cword>')
+  else
+    call CocAction('doHover')
+  endif
+endfunction
+
+" Highlight symbol under cursor on CursorHold
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+" Remap for rename current word
+nmap <leader>rn <Plug>(coc-rename)
+
+" Show all diagnostics
+nnoremap <silent> <space>a  :<C-u>CocList diagnostics<cr>
+" Find symbol of current document
+nnoremap <silent> <space>o  :<C-u>CocList outline<cr>
+" Search workspace symbols
+nnoremap <silent> <space>s  :<C-u>CocList -I symbols<cr>
+" Do default action for next item.
+nnoremap <silent> <space>j  :<C-u>CocNext<CR>
+" Do default action for previous item.
+nnoremap <silent> <space>k  :<C-u>CocPrev<CR>
+" Resume latest coc list
+nnoremap <silent> <space>p  :<C-u>CocListResume<CR>
+
+" Notify coc.nvim that <enter> has been pressed.
+" Currently used for the formatOnType feature.
+inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
+      \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+" Metals specific commands
+" Start Metals Doctor
+command! -nargs=0 MetalsDoctor :call CocRequestAsync('metals', 'workspace/executeCommand', { 'command': 'doctor-run' })
+" Manually start build import
+command! -nargs=0 MetalsImport :call CocRequestAsync('metals', 'workspace/executeCommand', { 'command': 'build-import' })
+" Manually connect with the build server
+command! -nargs=0 MetalsConnect :call CocRequestAsync('metals', 'workspace/executeCommand', { 'command': 'build-connect' })
