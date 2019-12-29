@@ -15,28 +15,27 @@ endif
 
 call plug#begin('~/.config/nvim/plugged')
 
-" required!
-Plug 'w0rp/ale'
-Plug 'Lokaltog/vim-easymotion'
-Plug 'scrooloose/nerdtree'
+" Comments
 Plug 'scrooloose/nerdcommenter'
+
+" Navigation
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
-Plug 'mileszs/ack.vim'
-Plug 'tpope/vim-surround'
-Plug 'majutsushi/tagbar'
+
+" Theme
 Plug 'itchyny/lightline.vim'
 Plug 'lifepillar/vim-solarized8'
-"Plug 'gnattishness/cscope_maps'
-Plug 'universal-ctags/ctags'
-"Plug 'wikitopian/hardmode'
 
-Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': { -> coc#util#install()}}        " LSP client + autocompletion plugin
+" LSP client + autocompletion plugin
+Plug 'neoclide/coc.nvim', {'branch': 'release', 'do': { -> coc#util#install()}}
+
+" Testing
+Plug 'janko/vim-test'
 
 " language support
 Plug 'tpope/vim-markdown'
 "Plug 'wting/rust.vim'
-"Plug 'fatih/vim-go'
+Plug 'fatih/vim-go'
 Plug 'derekwyatt/vim-scala'
 call plug#end()
 
