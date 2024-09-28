@@ -2,4 +2,8 @@
 neovim/.config/nvim/.netrwhist
 neovim/.config/nvim/autoload/
 neovim/.config/nvim/plugged/
+vscode/User/profiles
+vscode/User/History
+vscode/User/workspaceStorage
+vscode/User/globalStorage
 

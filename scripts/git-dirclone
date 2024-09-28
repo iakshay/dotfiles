@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Extract the repository URL and the directory path from the arguments
+REPO_URL=$1
+DIR_PATH=$2
+
+if [ -z "$REPO_URL" ] || [ -z "$DIR_PATH" ]; then
+    echo "Usage: git dirclone <repo-url> <dir-path>"
+    exit 1
+fi
+
+git clone --filter=blob:none --no-checkout $REPO_URL
+pushd $(basename $REPO_URL)
+# Specify the directory to clone
+git sparse-checkout init
+git sparse-checkout set $DIR_PATH
+
+git read-tree -mu HEAD
+
+echo "Directory '$DIR_PATH' has been cloned from '$REPO_URL'"

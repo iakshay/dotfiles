@@ -1,0 +1,79 @@
+{
+  "telemetry.telemetryLevel": "off",
+  "workbench.startupEditor": "none",
+  "window.zoomLevel": 1,
+  "security.workspace.trust.untrustedFiles": "open",
+  "sqltools.useNodeRuntime": true,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.accessibilitySupport": "off",
+  "git.enableSmartCommit": true,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "workbench.iconTheme": "material-icon-theme",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "vitest.nodeEnv": {},
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false
+  },
+  "jupyter.askForKernelRestart": false,
+  "github.copilot.editor.enableAutoCompletions": true,
+  "editor.renderWhitespace": "none",
+  "extensions.experimental.affinity": {
+    "ms-toolsai.jupyter": 1,
+    "ms-toolsai.jupyter-renderers": 1,
+    "ms-python.python": 1,
+    "ms-python.vscode-pylance": 1
+  },
+  "remote.SSH.remotePlatform": {
+    "*.gitpod.io": "linux"
+  },
+  "terminal.integrated.enableMultiLinePasteWarning": false,
+  "notebook.output.scrolling": true,
+  "interactiveWindow.executeWithShiftEnter": true,
+  "window.commandCenter": false,
+  "workbench.layoutControl.enabled": false,
+  "breadcrumbs.enabled": false,
+  "workbench.editorAssociations": {
+    "*.plist": "default"
+  },
+  "terminal.integrated.macOptionIsMeta": true,
+  "excalidraw.theme": "light",
+  "excalidraw.image": {
+    "exportScale": 1,
+    "exportWithBackground": true,
+    "exportWithDarkMode": false
+  },
+  "aws.telemetry": false,
+  "amazonQ.telemetry": false,
+  "[asl]": {
+    "editor.defaultFormatter": "amazonwebservices.aws-toolkit-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
+  "notebook.editorOptionsCustomizations": {
+    "editor.insertSpaces": true
+  },
+  "svg.preview.mode": "svg",
+  "cmake.showOptionsMovedNotification": false,
+  "workbench.colorTheme": "Solarized Light",
+  "window.systemColorTheme": "auto",
+  "window.newWindowProfile": "[Code] Python",
+}
