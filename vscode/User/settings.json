@@ -39,7 +39,8 @@
     "ms-toolsai.jupyter": 1,
     "ms-toolsai.jupyter-renderers": 1,
     "ms-python.python": 1,
-    "ms-python.vscode-pylance": 1
+    "ms-python.vscode-pylance": 1,
+    "asvetliakov.vscode-neovim": 1
   },
   "remote.SSH.remotePlatform": {
     "*.gitpod.io": "linux"
@@ -73,7 +74,13 @@
   },
   "svg.preview.mode": "svg",
   "cmake.showOptionsMovedNotification": false,
-  "workbench.colorTheme": "Solarized Light",
   "window.systemColorTheme": "auto",
-  "window.newWindowProfile": "[Code] Python",
+  "explorer.confirmDragAndDrop": false,
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "terminal.integrated.tabs.location": "left",
+  "terminal.integrated.tabs.enabled": false,
+  "editor.minimap.enabled": false,
+  "workbench.activityBar.location": "hidden",
 }

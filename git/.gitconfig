@@ -2,15 +2,31 @@
   name = Akshay Aurora
   email = akshayaurora@yahoo.com
 
+[alias]
+  co = checkout
+  br = branch
+
 [core]
   editor = vim
+  pager = delta
   excludesfile = ~/.gitignore
+
+[interactive]
+  diffFilter = delta --color-only
+
+[delta]
+  navigate = true
+  side-by-side = true
 
 [color]
   ui = true
 
 [push]
 	default = current
+
+[diff]
+  colorMoved = default
+
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f

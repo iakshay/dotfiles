@@ -1,0 +1,43 @@
+;; Command to watch goku output:
+;;      fswatch $GOKU_EDN_CONFIG_FILE | xargs -n1 -I{} bash -c "goku && cat ~/.dotfiles/karabiner/.config/karabiner/karabiner.json | jq '.profiles[] | select(.name == \"Default\")'"
+
+;; Resources:
+;;      https://www.danielcorin.com/til/goku/caps-lock-to-hyper/
+
+;; Keycodes
+;; !  | means mandatory
+;; #  | means optional
+;; C  | left_command
+;; T  | left_control
+;; O  | left_option
+;; S  | left_shift
+;; F  | fn
+;; Q  | right_command
+;; W  | right_control
+;; E  | right_option
+;; R  | right_shift
+;; P  | caps_lock
+;; !! | mandatory command + control + optional + shift (hyper)
+;; ## | optional any
+
+{
+    :templates {:launch "open -a '/Applications/%s.app'"}
+    :main [
+        {:des "wezterm" :rules [
+                            [:!!w [:launch "Wezterm"]]
+                        ]},
+        {:des "Vscode" :rules [
+                            [:!!v  [:launch "Visual Studio Code"]]
+                            ]},
+        {:des "Arc" :rules [
+                            [:!!m [:launch "Arc"]]
+                            ]},
+        {:des "Todoist" :rules [
+                            [:!!t [:launch "Todoist"]]
+                            ]},
+        {:des "Notion" :rules [
+                            [:!!n [:launch "Notion"]]
+                        ]},
+        {:des "capslock hyper-esc" :rules [[:##caps_lock :!CTOleft_shift nil {:alone :escape}]]}
+    ]
+}
