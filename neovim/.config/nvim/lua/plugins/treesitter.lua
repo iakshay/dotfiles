@@ -6,6 +6,44 @@ return { -- Highlight, edit, and navigate code
 	build = ":TSUpdate",
 	main = "nvim-treesitter.configs", -- Sets main module to use for opts
 	-- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+	config = function()
+		-- https://gist.github.com/lestoni/8c74da455cce3d36eb68
+		-- https://www.jackfranklin.co.uk/blog/code-folding-in-vim-neovim/
+		vim.opt.foldcolumn = "0"
+		vim.opt.foldmethod = "expr"
+		vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+		-- vim.opt.foldtext = "v:lua.vim.treesitter.foldtext()"
+		vim.o.foldtext = ""
+		vim.o.fillchars = "fold: "
+		-- vim.opt.foldtext = ""
+
+		vim.opt.foldnestmax = 3
+		vim.opt.foldlevel = 99
+		vim.opt.foldlevelstart = 99
+
+		local function close_all_folds()
+			vim.api.nvim_exec2("%foldc!", { output = false })
+		end
+		local function open_all_folds()
+			vim.api.nvim_exec2("%foldo!", { output = false })
+		end
+		-- Function to toggle fold column
+		local function toggle_fold_column()
+			local fold_column = vim.wo.foldcolumn
+			if fold_column == "4" then
+				vim.wo.foldcolumn = "0" -- Set to 0 to hide the fold column
+			else
+				vim.wo.foldcolumn = "4" -- Set to 4 to show the fold column
+			end
+		end
+
+		-- zR open all folds
+		-- zM close all open folds
+		-- za toggles the fold at the cursor
+		vim.keymap.set("n", "<leader>zs", close_all_folds, { desc = "[s]hut all folds" })
+		vim.keymap.set("n", "<leader>zo", open_all_folds, { desc = "[o]pen all folds" })
+		vim.keymap.set("n", "<leader>zT", toggle_fold_column, { desc = "[T]oggle fold columns" })
+	end,
 	opts = {
 		ensure_installed = {
 			"bash",
@@ -40,16 +78,80 @@ return { -- Highlight, edit, and navigate code
 			},
 		},
 		textobjects = {
+			select = {
+				enable = true,
+
+				-- Automatically jump forward to textobjects, similar to targets.vim
+				lookahead = true,
+
+				keymaps = {
+					-- You can use the capture groups defined in textobjects.scm
+					["af"] = "@function.outer",
+					["if"] = "@function.inner",
+					["ac"] = "@class.outer",
+					-- you can optionally set descriptions to the mappings (used in the desc parameter of nvim_buf_set_keymap
+					["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
+				},
+				-- You can choose the select mode (default is charwise 'v')
+				selection_modes = {
+					["@parameter.outer"] = "v", -- charwise
+					["@function.outer"] = "V", -- linewise
+					["@class.outer"] = "<c-v>", -- blockwise
+				},
+				-- If you set this to `true` (default is `false`) then any textobject is
+				-- extended to include preceding or succeeding whitespace. Succeeding
+				-- whitespace has priority in order to act similarly to eg the built-in
+				-- `ap`. Can also be a function (see above).
+				include_surrounding_whitespace = true,
+			},
+			swap = {
+				enable = true,
+				swap_next = {
+					["<leader>a"] = "@parameter.inner",
+				},
+				swap_previous = {
+					["<leader>A"] = "@parameter.inner",
+				},
+			},
 			move = {
 				enable = true,
-				goto_next_start = { ["]f"] = "@function.outer", ["]c"] = "@class.outer", ["]a"] = "@parameter.inner" },
-				goto_next_end = { ["]F"] = "@function.outer", ["]C"] = "@class.outer", ["]A"] = "@parameter.inner" },
-				goto_previous_start = {
-					["[f"] = "@function.outer",
-					["[c"] = "@class.outer",
-					["[a"] = "@parameter.inner",
+				set_jumps = true, -- whether to set jumps in the jumplist
+				goto_next_start = {
+					["]m"] = "@function.outer",
+					["]]"] = "@class.outer",
 				},
-				goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer", ["[A"] = "@parameter.inner" },
+				goto_next_end = {
+					["]M"] = "@function.outer",
+					["]["] = "@class.outer",
+				},
+				goto_previous_start = {
+					["[m"] = "@function.outer",
+					["[["] = "@class.outer",
+				},
+				goto_previous_end = {
+					["[M"] = "@function.outer",
+					["[]"] = "@class.outer",
+				},
+			},
+			-- move = {
+			-- 	enable = true,
+			-- 	goto_next_start = { ["]f"] = "@function.outer", ["]c"] = "@class.outer", ["]a"] = "@parameter.inner" },
+			-- 	goto_next_end = { ["]F"] = "@function.outer", ["]C"] = "@class.outer", ["]A"] = "@parameter.inner" },
+			-- 	goto_previous_start = {
+			-- 		["[f"] = "@function.outer",
+			-- 		["[c"] = "@class.outer",
+			-- 		["[a"] = "@parameter.inner",
+			-- 	},
+			-- 	goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer", ["[A"] = "@parameter.inner" },
+			-- },
+			lsp_interop = {
+				enable = true,
+				border = "none",
+				floating_preview_opts = {},
+				peek_definition_code = {
+					["<leader>df"] = "@function.outer",
+					["<leader>dF"] = "@class.outer",
+				},
 			},
 		},
 	},

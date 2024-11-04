@@ -91,16 +91,11 @@ venv() {
 
 # Set up fzf key bindings and fuzzy completion
 eval "$(fzf --zsh)"
-# --- setup fzf theme ---
-fg="#CBE0F0"
-bg="#011628"
-bg_highlight="#143652"
-purple="#B388FF"
-blue="#06BCE4"
-cyan="#2CF9ED"
+FZF_COPY_TO_CLIPBOARD_SPACE_SEPERATED_LIST="execute-silent(echo -n {+} | pbcopy)+abort"
+FZF_COPY_TO_CLIPBOARD_NEWLINE_SEPERATED_LIST="execute-silent(cat {+f} | perl -pe \"chomp if eof\" | pbcopy)+abort"
 
+FZF_DEFAULT_OPTS="--no-mouse --height 50% -1 --reverse --multi --inline-info --preview='[[ \$(file --mime (}) =~ binary 1] && echo (} is a binary file || (bat --style=numbers --color=always (} || cat (}) 2> /dev/null | head -300' --preview-window='right:hidden:wrap' --bind='f3:execute(bat --style=numbers {} || less -f (}),f2:toggle-preview,ctrl-d:half-page-down,ctrl-u:half-page-up,ctrl-y:$FZF_COPY_TO_CLIPBOARD_NEWLINE_SEPERATED_LIST'"
 export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS' --color=fg:-1,bg:-1,hl:#5f87af --color=fg+:#d0d0d0,bg+:#262626,hl+:#5fd7ff --color=info:#afaf87,prompt:#d7005f,pointer:#af5fff --color=marker:#87ff00,spinner:#af5fff,header:#87afaf'
-# export FZF_DEFAULT_OPTS="--color=fg:${fg},bg:${bg},hl:${purple},fg+:${fg},bg+:${bg_highlight},hl+:${purple},info:${blue},prompt:${cyan},pointer:${cyan},marker:${cyan},spinner:${cyan},header:${cyan}"
 
 # -- Use fd instead of fzf --
 
@@ -140,6 +135,7 @@ _fzf_comprun() {
     *)            fzf --preview "$show_file_or_dir_preview" "$@" ;;
   esac
 }
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # ----- Bat (better cat) -----
 
@@ -148,7 +144,6 @@ export BAT_THEME=gruvbox-dark
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 alias neovim=nvim
 alias vim=nvim
@@ -165,6 +160,10 @@ alias ....="cd ../../.."
 # alias cd="z"
 alias reload='source ~/.zshrc'
 alias ze='vim ~/.zshrc'
+alias gs='git status'
+alias gd='git diff'
 alias gam='git commit -a --amend --no-edit'
 alias kb=karabiner_cli
+alias lg=lazygit
 export GOKU_EDN_CONFIG_FILE=$HOME/.config/karabiner/karabiner.edn
+

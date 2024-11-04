@@ -6,6 +6,11 @@ vim.g.maplocalleader = " "
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_node_provider = 0
+
 -- [[ Setting options ]]
 --  For more options, you can see `:help option-list`
 
@@ -100,10 +105,27 @@ vim.keymap.set("c", "<a-f>", "<C-right>", { desc = "Move forward one word" })
 -- Open help in new tab
 vim.cmd("cnoreabbrev ht tab help")
 
-vim.g.loaded_ruby_provider = 0
-vim.g.loaded_python3_provider = 0
-vim.g.loaded_perl_provider = 0
-vim.g.loaded_node_provider = 0
+vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
+
+vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
+vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+
+-- Join current line and keep cursor
+-- vim.keymap.set("n", "J", "mzJ`z")
+
+-- Search and center screen
+vim.keymap.set("n", "<C-d>", "<C-d>zz")
+vim.keymap.set("n", "<C-u>", "<C-u>zz")
+vim.keymap.set("n", "n", "nzzzv")
+vim.keymap.set("n", "N", "Nzzzv")
+
+-- Yanks selected text to the system clipboard.
+vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
+-- Yanks the entire line to the system clipboard.
+vim.keymap.set("n", "<leader>Y", [["+Y]])
+
+-- Deletes selected text without affecting the default register.
+-- vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]])
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -154,9 +176,7 @@ require("lazy").setup({
 		},
 	},
 	change_detection = {
-		-- automatically check for config file changes and reload the ui
-		enabled = true,
-		notify = true, -- get a notification when changes are found
+		notify = false,
 	},
 })
 

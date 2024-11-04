@@ -7,7 +7,7 @@ return { -- Collection of various small independent plugins/modules
 		--  - va)  - [V]isually select [A]round [)]paren
 		--  - yinq - [Y]ank [I]nside [N]ext [Q]uote
 		--  - ci'  - [C]hange [I]nside [']quote
-		require("mini.ai").setup({ n_lines = 500 })
+		require("mini.ai").setup()
 
 		-- Add/delete/replace surroundings (brackets, quotes, etc.)
 		--
@@ -18,7 +18,7 @@ return { -- Collection of various small independent plugins/modules
 
 		require("mini.indentscope").setup({
 			draw = {
-				delay = 500,
+				delay = 5000,
 				animation = require("mini.indentscope").gen_animation.none(),
 			},
 		})

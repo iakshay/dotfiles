@@ -1,0 +1,4 @@
+# Disable the AWS module; it's noisy
+[aws]
+disabled = true
+

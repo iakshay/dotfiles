@@ -36,6 +36,7 @@ end)
 You can combine modifiers using the `|` symbol ]]
 
 config.hide_tab_bar_if_only_one_tab = true
+config.default_prog = { "/opt/homebrew/bin/tmux", "new", "-As0" }
 
 -- config.launch_menu = {{
 --     label = 'fish',
@@ -101,7 +102,7 @@ myTable = {
 	},
 }
 
-printTable(wezterm.default_hyperlink_rules())
+-- printTable(wezterm.default_hyperlink_rules())
 
 config.launch_menu = {
 	{

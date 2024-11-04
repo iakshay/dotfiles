@@ -1,18 +1,5 @@
 return {
 	"tpope/vim-sleuth", -- Detect tabstop and shiftwidth automatically
-	-- See `:help gitsigns` to understand what the configuration keys do
-	{ -- Adds git related signs to the gutter, as well as utilities for managing changes
-		"lewis6991/gitsigns.nvim",
-		opts = {
-			signs = {
-				add = { text = "+" },
-				change = { text = "~" },
-				delete = { text = "_" },
-				topdelete = { text = "‾" },
-				changedelete = { text = "~" },
-			},
-		},
-	},
 	-- Highlight todo, notes, etc in comments
 	{
 		"folke/todo-comments.nvim",
@@ -28,7 +15,13 @@ return {
 			vim.cmd.hi("Comment gui=none")
 		end,
 	},
-	{ "mbbill/undotree" },
+	{
+		"mbbill/undotree",
+		config = function()
+			-- TODO: Make it work better with NeoTree
+			vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
+		end,
+	},
 	-- Neo-tree is a Neovim plugin to browse the file system
 	-- https://github.com/nvim-neo-tree/neo-tree.nvim
 	{
