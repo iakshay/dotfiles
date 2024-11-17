@@ -3,6 +3,10 @@ return {
 		"tpope/vim-fugitive",
 		config = function()
 			vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
+			vim.keymap.set("n", "<leader>gb", function()
+				vim.cmd.Git("blame")
+				vim.cmd.wincmd("p")
+			end, { desc = "Git blame" })
 		end,
 	},
 	-- See `:help gitsigns` to understand what the configuration keys do
@@ -69,5 +73,22 @@ return {
 				map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>")
 			end,
 		},
+	},
+	{
+		dir = "~/.config/nvim/lua/personal", -- Load the folder containing your helper
+		config = function()
+			local helper = require("personal.copy_github_link")
+
+			-- Create the keymap
+			vim.keymap.set({ "n", "v" }, "<leader>ghc", function()
+				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+				helper.copy_github_link()
+			end, { desc = "Copy GitHub link" })
+
+			vim.keymap.set({ "n", "v" }, "<leader>gho", function()
+				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
+				helper.open_github_link()
+			end, { desc = "Open GitHub link" })
+		end,
 	},
 }

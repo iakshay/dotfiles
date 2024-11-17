@@ -5,14 +5,8 @@ local io = require("io")
 local os = require("os")
 local act = wezterm.action
 
--- This will hold the configuration.
 local config = wezterm.config_builder()
-
-wezterm:log_info("debugging")
--- This is where you actually apply your config choices
-
--- For example, changing the color scheme:
-config.color_scheme = "Tomorrow (dark) (terminal.sexy)"
+config.color_scheme = "Tokyo Night"
 
 wezterm.on("window-config-reloaded", function(window, pane)
 	window:toast_notification("wezterm", "configuration reloaded!", nil, 4000)
@@ -37,6 +31,16 @@ You can combine modifiers using the `|` symbol ]]
 
 config.hide_tab_bar_if_only_one_tab = true
 config.default_prog = { "/opt/homebrew/bin/tmux", "new", "-As0" }
+config.window_decorations = "RESIZE"
+
+config.font_size = 13
+config.line_height = 1.16
+config.window_padding = {
+	left = 0,
+	right = 0,
+	top = "32px",
+	bottom = 0,
+}
 
 -- config.launch_menu = {{
 --     label = 'fish',
@@ -67,7 +71,6 @@ table.insert(config.keys, {
 	mods = "CMD|SHIFT",
 	action = wezterm.action.ActivateCommandPalette,
 })
-config.font_size = 15
 
 -- wezterm.on('open-uri', function(window, pane, uri)
 --   wezterm.log_info uri
@@ -106,15 +109,12 @@ myTable = {
 
 config.launch_menu = {
 	{
-		args = { "top" },
-	},
-	{
 		-- Optional label to show in the launcher. If omitted, a label
 		-- is derived from the `args`
-		label = "Bash",
+		label = "Zsh",
 		-- The argument array to spawn.  If omitted the default program
 		-- will be used as described in the documentation above
-		args = { "bash", "-l" },
+		args = { "zsh", "-l" },
 
 		-- You can specify an alternative current working directory;
 		-- if you don't specify one then a default based on the OSC 7

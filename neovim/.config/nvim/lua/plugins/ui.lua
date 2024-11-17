@@ -15,6 +15,19 @@ return {
 			vim.cmd.hi("Comment gui=none")
 		end,
 	},
+	-- {
+	-- 	"maxmx03/solarized.nvim",
+	-- 	lazy = false,
+	-- 	priority = 1000,
+	-- 	---@type solarized.config
+	-- 	opts = {},
+	-- 	config = function(_, opts)
+	-- 		vim.o.termguicolors = true
+	-- 		vim.o.background = "light"
+	-- 		require("solarized").setup(opts)
+	-- 		vim.cmd.colorscheme("solarized")
+	-- 	end,
+	-- },
 	{
 		"mbbill/undotree",
 		config = function()
@@ -34,10 +47,14 @@ return {
 		},
 		cmd = "Neotree",
 		keys = {
-			{ "\\", ":Neotree reveal<CR>", desc = "NeoTree reveal", silent = true },
+			{ "\\e", ":Neotree reveal<CR>", desc = "NeoTree reveal", silent = true },
 		},
 		opts = {
 			filesystem = {
+				follow_current_file = {
+					enabled = true,
+					leave_dirs_open = false,
+				},
 				window = {
 					mappings = {
 						["\\"] = "close_window",

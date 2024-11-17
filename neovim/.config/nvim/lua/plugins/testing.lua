@@ -41,6 +41,13 @@ return {
 				desc = "Run Last",
 			},
 			{
+				"\\t",
+				function()
+					require("neotest").summary.toggle()
+				end,
+				desc = "Toggle Summary",
+			},
+			{
 				"<leader>ts",
 				function()
 					require("neotest").summary.toggle()
@@ -101,6 +108,7 @@ return {
 				adapters = {
 					require("neotest-python")({
 						dap = { justMyCode = false },
+						python = vim.fn.exepath("python"),
 					}),
 					require("neotest-plenary"),
 					require("neotest-vim-test")({

@@ -46,6 +46,10 @@ return {
 				dapui.close()
 			end
 			require("dap-python").setup("python")
+			require("dap-python").resolve_python = function()
+				return vim.fn.exepath("python")
+			end
+-- stylua: ignore
 
 			-- load mason-nvim-dap here, after all adapters have been setup
 

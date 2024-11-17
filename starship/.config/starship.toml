@@ -2,3 +2,6 @@
 [aws]
 disabled = true
 
+[gcloud]
+disabled = true
+

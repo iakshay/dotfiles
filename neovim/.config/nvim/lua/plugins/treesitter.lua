@@ -57,6 +57,9 @@ return { -- Highlight, edit, and navigate code
 			"query",
 			"vim",
 			"vimdoc",
+			"hcl",
+			"terraform",
+			"http",
 		},
 		-- Autoinstall languages that are not installed
 		auto_install = true,
