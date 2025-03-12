@@ -32,3 +32,7 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
+[rebase]
+	updateRefs = true
+[maintenance]
+	repo = /Users/akshayaurora/Projects/core

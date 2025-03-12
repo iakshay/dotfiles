@@ -1,18 +1,20 @@
+# zmodload zsh/zprof
+export PATH=$PATH:/opt/homebrew/bin
 mkdir -p "$HOME/.zsh"
-if [[ ! -a "$HOME/.zsh/fzf-git.sh" ]]; then
-  git clone https://github.com/junegunn/fzf-git.sh "$HOME/.zsh/fzf-git.sh"
-fi
-fpath+=("$HOME/.zsh/fzf-git.sh/")
+# if [[ ! -a "$HOME/.zsh/fzf-git.sh" ]]; then
+#   git clone https://github.com/junegunn/fzf-git.sh "$HOME/.zsh/fzf-git.sh"
+# fi
+# fpath+=("$HOME/.zsh/fzf-git.sh/")
 
 # autoload -Uz fzf-git
-source ~/.zsh/fzf-git.sh/fzf-git.sh
+# source ~/.zsh/fzf-git.sh/fzf-git.sh
 
 # prompt starship
 eval "$(starship init zsh)"
 
-export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+# export PYENV_ROOT="$HOME/.pyenv"
+# command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+# eval "$(pyenv init -)"
 
 export EDITOR=nvim
 export VISUAL=nvim
@@ -23,10 +25,17 @@ zle -N edit-command-line
 bindkey '^xe' edit-command-line
 bindkey '^x^e' edit-command-line
 
-export NVM_DIR="$HOME/.nvm"
-  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
-
+# if [[ ! -a "$HOME/.zsh-nvm" ]]; then
+#   "Installing zsh-nvm"
+#   git clone https://github.com/lukechilds/zsh-nvm.git ~/.zsh-nvm
+# fi
+# export NVM_LAZY_LOAD=true
+# source ~/.zsh-nvm/zsh-nvm.plugin.zsh
+# export NVM_DIR="$HOME/.nvm"
+#   [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+#   [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+export PATH=$PATH:/Users/akshayaurora/.nvm/versions/node/v18.20.4/bin
+#
 export PATH=$PATH:~/.dotfiles/scripts
 export DENO_INSTALL="$HOME/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
@@ -53,39 +62,6 @@ load_shared_history() {
 }
 add-zsh-hook preexec load_shared_history
 
-# Function to manage virtual environments with subcommands
-venv() {
-    case "$1" in
-        activate)
-            # Look for a directory matching the *venv* pattern
-            venv_dir=$(find . -type d -maxdepth 1 -name '*venv*' | head -n 1)
-
-            if [[ -z "$venv_dir" ]]; then
-                echo "Error: No virtual environment found in the current directory or subdirectories."
-                return 1
-            fi
-
-            # Activate the virtual environment
-            source "$venv_dir/bin/activate"
-            echo "Activated virtual environment: $venv_dir"
-            ;;
-        
-        deactivate)
-            if [[ -z "$VIRTUAL_ENV" ]]; then
-                echo "Error: No virtual environment is currently activated."
-                return 1
-            fi
-
-            deactivate
-            echo "Deactivated virtual environment: $VIRTUAL_ENV"
-            ;;
-        
-        *)
-            echo "Usage: venv {activate|deactivate}"
-            return 1
-            ;;
-    esac
-}
 
 # ---- FZF -----
 
@@ -141,13 +117,13 @@ _fzf_comprun() {
 
 export BAT_THEME=gruvbox-dark
 
-source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 
 
 alias neovim=nvim
 alias vim=nvim
-alias ls="eza --icons=always --git-ignore"
+alias ls="eza --icons=always"
 
 # ---- Zoxide (better cd) ----
 eval "$(zoxide init zsh)"
@@ -160,10 +136,55 @@ alias ....="cd ../../.."
 # alias cd="z"
 alias reload='source ~/.zshrc'
 alias ze='vim ~/.zshrc'
-alias gs='git status'
-alias gd='git diff'
-alias gam='git commit -a --amend --no-edit'
+
 alias kb=karabiner_cli
 alias lg=lazygit
 export GOKU_EDN_CONFIG_FILE=$HOME/.config/karabiner/karabiner.edn
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/homebrew/Caskroom/miniconda/base/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh" ]; then
+        . "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/homebrew/Caskroom/miniconda/base/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+# eval "$(direnv hook zsh)"
+
+# Run the function for the initial shell startup directory
+# zprof
+#
+function gnb() {
+  if [[ -z "$1" ]]; then
+    echo "Usage: gnb <branch-name>"
+    return 1
+  fi
+
+  local branch_name=$1
+  local base_branch=${2:-main}
+
+  echo "Fetching latest changes from origin/$base_branch"
+  git fetch origin $base_branch || { echo "Failed to fetch from remote."; return 1; }
+
+  echo "Creating and switching to new branch: $branch_name"
+  git checkout -b "$branch_name" origin/$base_branch || { echo "Failed to create branch $branch_name."; return 1; }
+
+  echo "Branch '$branch_name' created and switched successfully."
+}
+alias gpush='git pu || git push origin $(git rev-parse --abbrev-ref HEAD)'
+alias gs='git status'
+alias gc='git checkout'
+alias gd='git diff'
+alias gam='git commit -a --amend --no-edit'
+alias ge="vim $(git rev-parse --show-toplevel)/.git/config"
+alias k='kubectl'
+
+eval "~/.dotfiles/zsh/internal.zsh"
 

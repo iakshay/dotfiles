@@ -44,12 +44,15 @@ return {
 					vim.keymap.set("n", "<leader>ws", function()
 						vim.lsp.buf.workspace_symbol()
 					end, opts)
+					vim.keymap.set("n", "<leader>ds", function()
+						vim.lsp.buf.document_symbol()
+					end, opts)
 					vim.keymap.set("n", "<leader>dw", function()
 						vim.diagnostic.open_float()
 					end, opts)
-					-- vim.keymap.set("n", "<leader>vca", function()
-					-- 	vim.lsp.buf.code_action()
-					-- end, opts)
+					vim.keymap.set("n", "<leader>ca", function()
+						vim.lsp.buf.code_action()
+					end, opts)
 					vim.keymap.set("i", "<C-h>", function()
 						vim.lsp.buf.signature_help()
 					end, opts)
@@ -171,7 +174,20 @@ return {
 			local servers = {
 				-- clangd = {},
 				-- gopls = {},
-				pyright = {},
+				pyright = {
+					settings = {
+						python = {
+							pythonPath = vim.fn.trim(vim.fn.system('which python')),
+							-- pythonPath = vim.fn.exepath("python"),
+							analysis = {
+								indexing = true,
+								typeCheckingMode = "basic",
+								diagnosticMode = "workspace",
+								autoImportCompletions = true,
+							},
+						},
+					},
+				},
 				-- rust_analyzer = {},
 				-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
 				--
@@ -181,6 +197,18 @@ return {
 				-- But for many setups, the LSP (`ts_ls`) will work just fine
 				-- ts_ls = {},
 				--
+				yamlls = {
+					schemas = {
+						kubernetes = "k8s-*.yaml",
+						["http://json.schemastore.org/github-workflow"] = ".github/workflows/*",
+						["http://json.schemastore.org/github-action"] = ".github/action.{yml,yaml}",
+						["http://json.schemastore.org/ansible-stable-2.9"] = "roles/tasks/**/*.{yml,yaml}",
+						["http://json.schemastore.org/prettierrc"] = ".prettierrc.{yml,yaml}",
+						["http://json.schemastore.org/kustomization"] = "kustomization.{yml,yaml}",
+						["http://json.schemastore.org/chart"] = "Chart.{yml,yaml}",
+						["http://json.schemastore.org/circleciconfig"] = ".circleci/**/*.{yml,yaml}",
+					},
+				},
 
 				lua_ls = {
 					-- cmd = {...},
@@ -204,7 +232,12 @@ return {
 			--    :Mason
 			--
 			--  You can press `g?` for help in this menu.
-			require("mason").setup()
+			require("mason").setup({
+				registries = {
+					"github:mason-org/mason-registry",
+					-- "file:~/.config/nvim/mason-registry",
+				},
+			})
 
 			-- You can add other tools here that you want Mason to install
 			-- for you, so that they are available from within Neovim.
@@ -216,6 +249,8 @@ return {
 				"prettier",
 				"prettierd",
 				"tailwindcss-language-server",
+				"helm-ls",
+				-- "kulala-fmt",
 				"stylua", -- Used to format Lua code
 			})
 			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
@@ -233,5 +268,143 @@ return {
 				},
 			})
 		end,
+	},
+	{
+		"folke/trouble.nvim",
+		opts = {}, -- for default options, refer to the configuration section for custom setup.
+		cmd = "Trouble",
+		keys = {
+			{
+				"<leader>xx",
+				"<cmd>Trouble diagnostics toggle<cr>",
+				desc = "Diagnostics (Trouble)",
+			},
+			{
+				"<leader>xX",
+				"<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+				desc = "Buffer Diagnostics (Trouble)",
+			},
+			{
+				"<leader>cs",
+				"<cmd>Trouble symbols toggle focus=false<cr>",
+				desc = "Symbols (Trouble)",
+			},
+			{
+				"<leader>cl",
+				"<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+				desc = "LSP Definitions / references / ... (Trouble)",
+			},
+			{
+				"<leader>xL",
+				"<cmd>Trouble loclist toggle<cr>",
+				desc = "Location List (Trouble)",
+			},
+			{
+				"<leader>xQ",
+				"<cmd>Trouble qflist toggle<cr>",
+				desc = "Quickfix List (Trouble)",
+			},
+		},
+	},
+	{
+		"kiyoon/python-import.nvim",
+		-- build = "pipx install . --force",
+		build = "uv tool install . --force --reinstall",
+		keys = {
+			{
+				"<M-CR>",
+				function()
+					require("python_import.api").add_import_current_word_and_notify()
+				end,
+				mode = { "i", "n" },
+				silent = true,
+				desc = "Add python import",
+				ft = "python",
+			},
+			{
+				"<M-CR>",
+				function()
+					require("python_import.api").add_import_current_selection_and_notify()
+				end,
+				mode = "x",
+				silent = true,
+				desc = "Add python import",
+				ft = "python",
+			},
+			{
+				"<space>i",
+				function()
+					require("python_import.api").add_import_current_word_and_move_cursor()
+				end,
+				mode = "n",
+				silent = true,
+				desc = "Add python import and move cursor",
+				ft = "python",
+			},
+			{
+				"<space>i",
+				function()
+					require("python_import.api").add_import_current_selection_and_move_cursor()
+				end,
+				mode = "x",
+				silent = false,
+				desc = "Add python import and move cursor",
+				ft = "python",
+			},
+			{
+				"<space>tr",
+				function()
+					require("python_import.api").add_rich_traceback()
+				end,
+				silent = true,
+				desc = "Add rich traceback",
+				ft = "python",
+			},
+		},
+		opts = {
+			-- Example 1:
+			-- Default behaviour for `tqdm` is `from tqdm.auto import tqdm`.
+			-- If you want to change it to `import tqdm`, you can set `import = {"tqdm"}` and `import_from = {tqdm = nil}` here.
+			-- If you want to change it to `from tqdm import tqdm`, you can set `import_from = {tqdm = "tqdm"}` here.
+
+			-- Example 2:
+			-- Default behaviour for `logger` is `import logging`, ``, `logger = logging.getLogger(__name__)`.
+			-- If you want to change it to `import my_custom_logger`, ``, `logger = my_custom_logger.get_logger()`,
+			-- you can set `statement_after_imports = {logger = {"import my_custom_logger", "", "logger = my_custom_logger.get_logger()"}}` here.
+			extend_lookup_table = {
+				---@type string[]
+				import = {
+					-- "tqdm",
+				},
+
+				---@type table<string, string>
+				import_as = {
+					-- These are the default values. Here for demonstration.
+					-- np = "numpy",
+					-- pd = "pandas",
+				},
+
+				---@type table<string, string>
+				import_from = {
+					-- tqdm = nil,
+					-- tqdm = "tqdm",
+				},
+
+				---@type table<string, string[]>
+				statement_after_imports = {
+					-- logger = { "import my_custom_logger", "", "logger = my_custom_logger.get_logger()" },
+				},
+			},
+
+			---Return nil to indicate no match is found and continue with the default lookup
+			---Return a table to stop the lookup and use the returned table as the result
+			---Return an empty table to stop the lookup. This is useful when you want to add to wherever you need to.
+			---@type fun(winnr: integer, word: string, ts_node: TSNode?): string[]?
+			custom_function = function(winnr, word, ts_node)
+				-- if vim.endswith(word, "_DIR") then
+				--   return { "from my_module import " .. word }
+				-- end
+			end,
+		},
 	},
 }

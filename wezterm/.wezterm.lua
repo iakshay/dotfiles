@@ -30,7 +30,7 @@ end)
 You can combine modifiers using the `|` symbol ]]
 
 config.hide_tab_bar_if_only_one_tab = true
-config.default_prog = { "/opt/homebrew/bin/tmux", "new", "-As0" }
+-- config.default_prog = { "/opt/homebrew/bin/tmux", "new", "-As0" }
 config.window_decorations = "RESIZE"
 
 config.font_size = 13
