@@ -14,26 +14,14 @@ return {
 		-- Your DBUI configuration
 		vim.g.db_ui_use_nerd_fonts = 1
 
-		local augroup = vim.api.nvim_create_augroup("DBUIOpened", { clear = true })
-		vim.api.nvim_create_autocmd("User", {
-			pattern = "DBUIOpened",
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = "sql",
 			callback = function()
-				vim.opt.number = true
-				vim.opt.relativenumber = true
-				vim.cmd("call search('sunrise')")
-				vim.cmd("norm o")
-				vim.cmd("call search('Schemas')")
-				vim.cmd("norm o")
-
-				vim.cmd("call search('shared')")
-				vim.cmd("norm o")
-
-				vim.cmd("call search('tenant_default')")
-				vim.cmd("norm o")
+				-- Set the commentstring for SQL
+				vim.opt_local.commentstring = "-- %s" -- Change to your desired comment format
 			end,
-			group = augroup,
 		})
-
+	
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = "dbui",
 			callback = function()

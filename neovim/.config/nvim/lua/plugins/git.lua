@@ -3,10 +3,6 @@ return {
 		"tpope/vim-fugitive",
 		config = function()
 			vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
-			vim.keymap.set("n", "<leader>gb", function()
-				vim.cmd.Git("blame")
-				vim.cmd.wincmd("p")
-			end, { desc = "Git blame" })
 		end,
 	},
 	-- See `:help gitsigns` to understand what the configuration keys do
@@ -30,6 +26,102 @@ return {
 					opts.buffer = bufnr
 					vim.keymap.set(mode, l, r, opts)
 				end
+				local function toggle_git_blame()
+					local blame_bufnr = nil
+
+					-- Find the blame buffer if it exists
+					for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+						if
+							vim.api.nvim_buf_is_valid(bufnr)
+							and vim.api.nvim_buf_get_option(bufnr, "filetype") == "gitsigns-blame"
+						then
+							blame_bufnr = bufnr
+							break
+						end
+					end
+
+					if blame_bufnr then
+						-- If the blame buffer is found, close it
+						vim.api.nvim_buf_delete(blame_bufnr, { force = true })
+					else
+						-- If no blame buffer is found, show blame using Gitsigns
+						local current_win = vim.api.nvim_get_current_win()
+
+						vim.cmd("Gitsigns blame")
+
+						vim.api.nvim_set_current_win(current_win)
+					end
+				end
+				vim.keymap.set("n", "<leader>gb", function()
+					toggle_git_blame()
+				end, { desc = "Toggle Git blame" })
+
+				vim.api.nvim_create_autocmd("FileType", {
+					pattern = "gitsigns-blame", -- replace with your desired filetype
+					callback = function(ev)
+						local bufnr = vim.api.nvim_get_current_buf()
+						vim.keymap.set("n", "G", function()
+							local cache = require("gitsigns.cache").cache
+							local log = require("gitsigns.debug.log")
+							local helper = require("personal.copy_github_link")
+
+							local bcache = cache[bufnr]
+							if not bcache then
+								log.dprint("Not attached")
+								return
+							end
+							local blm_win = vim.api.nvim_get_current_win()
+							local cursor = vim.api.nvim_win_get_cursor(blm_win)[1]
+							local sha = bcache.blame[cursor].commit.sha
+							helper.open_github_commit(sha)
+						end, {
+							buffer = bufnr,
+							desc = "Open Commit in Github",
+						})
+
+						vim.keymap.set("n", "P", function()
+							local cache = require("gitsigns.cache").cache
+							local log = require("gitsigns.debug.log")
+							local helper = require("personal.copy_github_link")
+
+							local bcache = cache[bufnr]
+							if not bcache then
+								log.dprint("Not attached")
+								return
+							end
+							local blm_win = vim.api.nvim_get_current_win()
+							local cursor = vim.api.nvim_win_get_cursor(blm_win)[1]
+							local summary = bcache.blame[cursor].commit.summary
+
+							local prNumber = tonumber(summary:match("#(%d+)%)?$"))
+							helper.open_github_pr(prNumber)
+						end, {
+							buffer = bufnr,
+							desc = "Open PR in Github",
+						})
+
+						vim.keymap.set("n", "A", function()
+							local cache = require("gitsigns.cache").cache
+							local log = require("gitsigns.debug.log")
+							local helper = require("personal.copy_github_link")
+
+							local bcache = cache[bufnr]
+							if not bcache then
+								log.dprint("Not attached")
+								return
+							end
+							local blm_win = vim.api.nvim_get_current_win()
+							local cursor = vim.api.nvim_win_get_cursor(blm_win)[1]
+							local commit = bcache.blame[cursor].commit
+							local author_mail = commit.author_mail:sub(2, -2)
+
+							helper.open_github_author_commits(author_mail)
+						end, {
+							buffer = bufnr,
+							desc = "Open author commits in Github",
+						})
+					end,
+				})
 
 				-- Navigation
 				map("n", "]c", function()

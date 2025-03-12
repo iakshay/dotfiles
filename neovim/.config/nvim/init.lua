@@ -124,6 +124,18 @@ vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
 -- Yanks the entire line to the system clipboard.
 vim.keymap.set("n", "<leader>Y", [["+Y]])
 
+-- Key mapping for Ctrl-c to close the current buffer
+vim.keymap.set("n", "<C-c>", function()
+	local bufnr = vim.api.nvim_get_current_buf()
+	vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+vim.filetype.add({
+	extension = {
+		["http"] = "http",
+	},
+})
+
 -- Deletes selected text without affecting the default register.
 -- vim.keymap.set({ "n", "v" }, "<leader>d", [["_d]])
 
@@ -155,6 +167,13 @@ vim.opt.rtp:prepend(lazypath)
 -- [[ Configure and install plugins ]]
 require("lazy").setup({
 	{ import = "plugins" },
+	{
+		dir = "./personal/",
+		name = "project-config",
+		config = function()
+			require("personal.projects").setup()
+		end,
+	},
 }, {
 	ui = {
 		-- If you are using a Nerd Font: set icons to an empty table which will use the

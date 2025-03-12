@@ -46,6 +46,21 @@ return {
 				dapui.close()
 			end
 			require("dap-python").setup("python")
+			table.insert(require("dap").configurations.python, {
+				type = "python",
+				request = "attach",
+				name = "configuration",
+				mode = "remote",
+				connect = {
+					port = 5678,
+					host = "0.0.0.0",
+				},
+				cwd = vim.fn.getcwd(),
+				pathMappings = {
+					{ localRoot = vim.fn.getcwd(), remoteRoot = "/app/" },
+				},
+				-- ... more options, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+			})
 			require("dap-python").resolve_python = function()
 				return vim.fn.exepath("python")
 			end

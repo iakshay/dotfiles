@@ -1,8 +1,83 @@
 local M = {}
 
-function M.get_github_link()
+function M.is_git_commit_buffer()
+	-- Check if the buffer's filetype is git
+	local ft = vim.bo.filetype
+	if ft ~= "git" then
+		return nil
+	end
+
+	-- Get the buffer's full path
+	local path = vim.fn.expand("%:p")
+
+	-- Check if it's a gitsigns commit path
+	if not path:match("^gitsigns://.*/.git//[a-f0-9]+$") then
+		return nil
+	end
+
+	-- Extract the commit hash (last 40 characters of the path)
+	local commit_id = path:match("/([a-f0-9]+)$")
+
+	return commit_id
+end
+
+function M.get_github_repo_url()
+	local Job = require("plenary.job")
+
+	-- Get the GitHub remote URL
+	local remote_url = nil
+	Job:new({
+		command = "git",
+		args = { "remote", "get-url", "origin" },
+		on_stdout = function(_, data)
+			remote_url = data
+		end,
+	}):sync()
+
+	if not remote_url then
+		print("Failed to retrieve Git remote URL.")
+		return
+	end
+
+	-- Replace SSH URL with HTTPS if necessary
+	remote_url = remote_url:gsub("git@github%-work%.com:", "https://github.com/")
+	remote_url = remote_url:gsub("git@github%.com:", "https://github.com/")
+	remote_url = remote_url:gsub("%.git$", "")
+
+	return remote_url
+end
+
+function M.get_github_pr_url(pr_number)
+	local remote_url = M.get_github_repo_url()
+	local github_link = string.format("%s/pull/%s", remote_url, pr_number)
+	return github_link
+end
+
+function M.get_github_author_commits(author)
+	local remote_url = M.get_github_repo_url()
+	local github_link = string.format("%s/commits?author=%s", remote_url, author)
+	return github_link
+end
+function M.get_github_author_prs(author)
+	local remote_url = M.get_github_repo_url()
+	local github_link = string.format("%s/pulls?is:pull author:%s", remote_url, author)
+	return github_link
+end
+
+function M.get_github_commit_url(commit)
+	local remote_url = M.get_github_repo_url()
+	local github_link = string.format("%s/commit/%s", remote_url, commit)
+	return github_link
+end
+
+function M.get_github_file_url()
 	local Job = require("plenary.job") -- Requires `nvim-lua/plenary.nvim` plugin.
 
+	local commit = M.is_git_commit_buffer()
+
+	if commit ~= nil then
+		return M.get_github_commit_url(commit)
+	end
 	-- Get the current buffer's file path
 	local file_path = vim.fn.expand("%:p")
 	if file_path == "" then
@@ -32,24 +107,7 @@ function M.get_github_link()
 	end
 
 	-- Get the GitHub remote URL
-	local remote_url = nil
-	Job:new({
-		command = "git",
-		args = { "remote", "get-url", "origin" },
-		on_stdout = function(_, data)
-			remote_url = data
-		end,
-	}):sync()
-
-	if not remote_url then
-		print("Failed to retrieve Git remote URL.")
-		return
-	end
-
-	-- Replace SSH URL with HTTPS if necessary
-	remote_url = remote_url:gsub("git@github%-work%.com:", "https://github.com/")
-	remote_url = remote_url:gsub("git@github%.com:", "https://github.com/")
-	remote_url = remote_url:gsub("%.git$", "")
+	local remote_url = M.get_github_repo_url()
 
 	-- Get the current branch
 	local branch = nil
@@ -92,7 +150,7 @@ function M.get_github_link()
 end
 
 function M.copy_github_link()
-	local github_link = M.get_github_link()
+	local github_link = M.get_github_file_url()
 	if not github_link then
 		print("Failed to generate GitHub link.")
 		return
@@ -104,7 +162,51 @@ function M.copy_github_link()
 end
 
 function M.open_github_link()
-	local github_link = M.get_github_link()
+	local github_link = M.get_github_file_url()
+	if not github_link then
+		print("Failed to generate GitHub link.")
+		return
+	end
+
+	-- Open the GitHub link in the default web browser
+	vim.ui.open(github_link)
+end
+
+function M.open_github_commit(commit)
+	local github_link = M.get_github_commit_url(commit)
+	if not github_link then
+		print("Failed to generate GitHub link.")
+		return
+	end
+
+	-- Open the GitHub link in the default web browser
+	vim.ui.open(github_link)
+end
+
+function M.open_github_pr(prNumber)
+	local github_link = M.get_github_pr_url(prNumber)
+	if not github_link then
+		print("Failed to generate GitHub link.")
+		return
+	end
+
+	-- Open the GitHub link in the default web browser
+	vim.ui.open(github_link)
+end
+
+function M.open_github_author_commits(author)
+	local github_link = M.get_github_author_commits(author)
+	if not github_link then
+		print("Failed to generate GitHub link.")
+		return
+	end
+
+	-- Open the GitHub link in the default web browser
+	vim.ui.open(github_link)
+end
+
+function M.open_github_author_prs(author)
+	local github_link = M.get_github_author_prs(author)
 	if not github_link then
 		print("Failed to generate GitHub link.")
 		return

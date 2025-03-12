@@ -39,10 +39,138 @@ return { -- Fuzzy Finder (files, lsp, etc)
 
 		-- [[ Configure Telescope ]]
 		-- See `:help telescope` and `:help telescope.setup()`
+		local actions = require("telescope.actions")
 		local lga_actions = require("telescope-live-grep-args.actions")
+		local trouble = require("trouble.sources.telescope")
+		local function flash(prompt_bufnr)
+			require("flash").jump({
+				pattern = "^",
+				label = { after = { 0, 0 } },
+				search = {
+					mode = "search",
+					exclude = {
+						function(win)
+							return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "TelescopeResults"
+						end,
+					},
+				},
+				action = function(match)
+					local picker = require("telescope.actions.state").get_current_picker(prompt_bufnr)
+					picker:set_selection(match.pos[1] - 1)
+				end,
+			})
+		end
+		local function document_symbols_for_selected(prompt_bufnr)
+			local action_state = require("telescope.actions.state")
+			local entry = action_state.get_selected_entry()
+
+			if entry == nil then
+				print("No file selected")
+				return
+			end
+
+			actions.close(prompt_bufnr)
+
+			vim.schedule(function()
+				local bufnr = vim.fn.bufadd(entry.path)
+				vim.fn.bufload(bufnr)
+
+				local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
+
+				vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", params, function(err, result, _, _)
+					if err then
+						print("Error getting document symbols: " .. vim.inspect(err))
+						return
+					end
+
+					if not result or vim.tbl_isempty(result) then
+						print("No symbols found")
+						return
+					end
+
+					local function flatten_symbols(symbols, parent_name)
+						local flattened = {}
+						for _, symbol in ipairs(symbols) do
+							local name = symbol.name
+							if parent_name then
+								name = parent_name .. "." .. name
+							end
+							table.insert(flattened, {
+								name = name,
+								kind = symbol.kind,
+								range = symbol.range,
+								selectionRange = symbol.selectionRange,
+							})
+							if symbol.children then
+								local children = flatten_symbols(symbol.children, name)
+								for _, child in ipairs(children) do
+									table.insert(flattened, child)
+								end
+							end
+						end
+						return flattened
+					end
+
+					local flat_symbols = flatten_symbols(result)
+
+					-- Define highlight group for symbol kind
+					vim.cmd([[highlight TelescopeSymbolKind guifg=#61AFEF]])
+
+					require("telescope.pickers")
+						.new({}, {
+							prompt_title = "Document Symbols: " .. vim.fn.fnamemodify(entry.path, ":t"),
+							finder = require("telescope.finders").new_table({
+								results = flat_symbols,
+								entry_maker = function(symbol)
+									local kind = vim.lsp.protocol.SymbolKind[symbol.kind] or "Other"
+									return {
+										value = symbol,
+										display = function(entry)
+											local display_text = string.format("%-50s %s", entry.value.name, kind)
+											return display_text,
+												{ { { #entry.value.name + 1, #display_text }, "TelescopeSymbolKind" } }
+										end,
+										ordinal = symbol.name,
+										filename = entry.path,
+										lnum = symbol.selectionRange.start.line + 1,
+										col = symbol.selectionRange.start.character + 1,
+									}
+								end,
+							}),
+							sorter = require("telescope.config").values.generic_sorter({}),
+							previewer = require("telescope.config").values.qflist_previewer({}),
+							attach_mappings = function(_, map)
+								map("i", "<CR>", function(prompt_bufnr)
+									local selection = action_state.get_selected_entry()
+									actions.close(prompt_bufnr)
+									vim.cmd("edit " .. selection.filename)
+									vim.api.nvim_win_set_cursor(0, { selection.lnum, selection.col - 1 })
+								end)
+								return true
+							end,
+						})
+						:find()
+				end)
+			end)
+		end
 		require("telescope").setup({
 			defaults = {
-				file_ignore_patterns = { "^.git", "node_modules" },
+				mappings = {
+					i = {
+						["<esc>"] = actions.close,
+						["<C-t>"] = trouble.open,
+
+						["<c-s>"] = flash,
+						["<C-k>"] = document_symbols_for_selected,
+					},
+
+					n = {
+						s = flash,
+						["<C-t>"] = trouble.open,
+						["<C-k>"] = document_symbols_for_selected,
+					},
+				},
+				file_ignore_patterns = { "^.git", "node_modules", "experimental", "assets", "research", "dawn" },
 				vimgrep_arguments = {
 					"rg",
 					"--color=never",
@@ -77,7 +205,7 @@ return { -- Fuzzy Finder (files, lsp, etc)
 							["<c-f>"] = require("telescope.actions").to_fuzzy_refine,
 						},
 					},
-				},
+				}
 			},
 		})
 
@@ -85,12 +213,12 @@ return { -- Fuzzy Finder (files, lsp, etc)
 		pcall(require("telescope").load_extension, "fzf")
 		pcall(require("telescope").load_extension, "ui-select")
 		pcall(require("telescope").load_extension, "live_grep_args")
-
 		-- See `:help telescope.builtin`
 		local builtin = require("telescope.builtin")
 		local live_grep_args = require("telescope").extensions.live_grep_args
-		vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[S]earch [H]elp" })
+		vim.keymap.set("n", "<leader>snh", builtin.help_tags, { desc = "[S]earch [N]eovim [H]elp" })
 		vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[S]earch [K]eymaps" })
+	
 		vim.keymap.set("n", "<leader>sf", function()
 			builtin.find_files({ hidden = true })
 		end, { desc = "[S]earch [F]iles" })
