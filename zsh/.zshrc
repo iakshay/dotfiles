@@ -12,6 +12,9 @@ mkdir -p "$HOME/.zsh"
 # prompt starship
 eval "$(starship init zsh)"
 
+# Increase function nesting limit for starship
+export FUNCNEST=1000
+
 # export PYENV_ROOT="$HOME/.pyenv"
 # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
@@ -25,6 +28,10 @@ zle -N edit-command-line
 bindkey '^xe' edit-command-line
 bindkey '^x^e' edit-command-line
 
+# Word navigation bindings
+bindkey '^[f' forward-word    # Alt-f
+bindkey '^[b' backward-word   # Alt-b
+
 # if [[ ! -a "$HOME/.zsh-nvm" ]]; then
 #   "Installing zsh-nvm"
 #   git clone https://github.com/lukechilds/zsh-nvm.git ~/.zsh-nvm
@@ -34,7 +41,7 @@ bindkey '^x^e' edit-command-line
 # export NVM_DIR="$HOME/.nvm"
 #   [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
 #   [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
-export PATH=$PATH:/Users/akshayaurora/.nvm/versions/node/v18.20.4/bin
+# export PATH=$PATH:/Users/akshayaurora/.nvm/versions/node/v18.20.4/bin
 #
 export PATH=$PATH:~/.dotfiles/scripts
 export DENO_INSTALL="$HOME/.deno"
@@ -185,6 +192,20 @@ alias gd='git diff'
 alias gam='git commit -a --amend --no-edit'
 alias ge="vim $(git rev-parse --show-toplevel)/.git/config"
 alias k='kubectl'
+alias ldo="lazydocker"
 
 source ~/.dotfiles/zsh/internal.zsh
 
+
+ export NVM_DIR="$HOME/.nvm"
+  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+export PATH=$PATH:"$HOME/.cargo/bin/"
+alias pt=parquet-tools
+export RUST_BACKTRACE=full
+alias rr=rustrover

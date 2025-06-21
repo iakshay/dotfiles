@@ -12,3 +12,4 @@ karabiner/.config/karabiner/automatic_backups
 .env
 zsh/interal.z
 neovim/.config/nvim/lua/personal/projects.lua
+zsh/internal.zsh

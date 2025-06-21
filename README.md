@@ -12,7 +12,7 @@ stow](https://www.gnu.org/software/stow/).
 ```bash
 git clone git@github.com:iakshay/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-stow git neovim tmux wezterm iterm2 zsh fish karabiner
+stow git neovim tmux wezterm zsh claude
 ```
 
 VSCode
