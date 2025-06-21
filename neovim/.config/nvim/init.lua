@@ -167,13 +167,6 @@ vim.opt.rtp:prepend(lazypath)
 -- [[ Configure and install plugins ]]
 require("lazy").setup({
 	{ import = "plugins" },
-	-- {
-	-- 	dir = "./personal/",
-	-- 	name = "project-config",
-	-- 	config = function()
-	-- 		require("personal.projects").setup()
-	-- 	end,
-	-- },
 }, {
 	ui = {
 		-- If you are using a Nerd Font: set icons to an empty table which will use the

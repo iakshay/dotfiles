@@ -177,7 +177,7 @@ return {
 				pyright = {
 					settings = {
 						python = {
-							pythonPath = vim.fn.trim(vim.fn.system('which python')),
+							pythonPath = vim.fn.trim(vim.fn.system("which python")),
 							-- pythonPath = vim.fn.exepath("python"),
 							analysis = {
 								indexing = true,

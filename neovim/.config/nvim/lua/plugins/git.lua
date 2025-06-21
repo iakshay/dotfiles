@@ -57,69 +57,99 @@ return {
 				end, { desc = "Toggle Git blame" })
 
 				vim.api.nvim_create_autocmd("FileType", {
-					pattern = "gitsigns-blame", -- replace with your desired filetype
+					pattern = "gitsigns-blame",
 					callback = function(ev)
-						local bufnr = vim.api.nvim_get_current_buf()
-						vim.keymap.set("n", "G", function()
+						local bufnr = ev.buf
+
+						local function get_blame_data()
 							local cache = require("gitsigns.cache").cache
 							local log = require("gitsigns.debug.log")
-							local helper = require("personal.copy_github_link")
 
-							local bcache = cache[bufnr]
-							if not bcache then
-								log.dprint("Not attached")
-								return
+							-- Get the original buffer (not the blame buffer)
+							local orig_bufnr = nil
+							for buf, bcache in pairs(cache) do
+								if bcache.blame then
+									orig_bufnr = buf
+									break
+								end
 							end
-							local blm_win = vim.api.nvim_get_current_win()
-							local cursor = vim.api.nvim_win_get_cursor(blm_win)[1]
-							local sha = bcache.blame[cursor].commit.sha
-							helper.open_github_commit(sha)
-						end, {
-							buffer = bufnr,
-							desc = "Open Commit in Github",
-						})
 
-						vim.keymap.set("n", "P", function()
-							local cache = require("gitsigns.cache").cache
-							local log = require("gitsigns.debug.log")
-							local helper = require("personal.copy_github_link")
-
-							local bcache = cache[bufnr]
-							if not bcache then
-								log.dprint("Not attached")
-								return
+							if not orig_bufnr then
+								log.dprint("No original buffer found")
+								return nil
 							end
-							local blm_win = vim.api.nvim_get_current_win()
-							local cursor = vim.api.nvim_win_get_cursor(blm_win)[1]
-							local summary = bcache.blame[cursor].commit.summary
 
-							local prNumber = tonumber(summary:match("#(%d+)%)?$"))
-							helper.open_github_pr(prNumber)
-						end, {
-							buffer = bufnr,
-							desc = "Open PR in Github",
-						})
-
-						vim.keymap.set("n", "A", function()
-							local cache = require("gitsigns.cache").cache
-							local log = require("gitsigns.debug.log")
-							local helper = require("personal.copy_github_link")
-
-							local bcache = cache[bufnr]
-							if not bcache then
-								log.dprint("Not attached")
-								return
+							local bcache = cache[orig_bufnr]
+							if not bcache or not bcache.blame then
+								log.dprint("Not attached or no blame data")
+								return nil
 							end
-							local blm_win = vim.api.nvim_get_current_win()
-							local cursor = vim.api.nvim_win_get_cursor(blm_win)[1]
-							local commit = bcache.blame[cursor].commit
-							local author_mail = commit.author_mail:sub(2, -2)
 
-							helper.open_github_author_commits(author_mail)
-						end, {
-							buffer = bufnr,
-							desc = "Open author commits in Github",
-						})
+							local cursor = vim.api.nvim_win_get_cursor(0)[1]
+							return bcache.blame[cursor]
+						end
+
+						local function safe_execute(fn, desc)
+							return function()
+								local blame_data = get_blame_data()
+								if not blame_data then
+									vim.notify("No blame data available", vim.log.levels.WARN)
+									return
+								end
+
+								local ok, err = pcall(fn, blame_data)
+								if not ok then
+									vim.notify("Error in " .. desc .. ": " .. tostring(err), vim.log.levels.ERROR)
+								end
+							end
+						end
+
+						local helper = require("personal.copy_github_link")
+
+						vim.keymap.set(
+							"n",
+							"G",
+							safe_execute(function(blame_data)
+								helper.open_github_commit(blame_data.commit.sha)
+							end, "open commit"),
+							{
+								buffer = bufnr,
+								desc = "Open Commit in Github",
+							}
+						)
+
+						vim.keymap.set(
+							"n",
+							"P",
+							safe_execute(function(blame_data)
+								local summary = blame_data.commit.summary
+								local prNumber = tonumber(summary:match("#(%d+)%)?$"))
+
+								if not prNumber then
+									vim.notify("No PR number found in commit: " .. summary, vim.log.levels.WARN)
+									return
+								end
+
+								helper.open_github_pr(prNumber)
+							end, "open PR"),
+							{
+								buffer = bufnr,
+								desc = "Open PR in Github",
+							}
+						)
+
+						vim.keymap.set(
+							"n",
+							"A",
+							safe_execute(function(blame_data)
+								local author_mail = blame_data.commit.author_mail:sub(2, -2)
+								helper.open_github_author_commits(author_mail)
+							end, "open author commits"),
+							{
+								buffer = bufnr,
+								desc = "Open author commits in Github",
+							}
+						)
 					end,
 				})
 
