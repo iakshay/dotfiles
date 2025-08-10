@@ -1,12 +1,15 @@
 return { -- Autoformat
 	"stevearc/conform.nvim",
-	cmd = { "ConformDisable", "ConformEnable" },
+	event = { "BufWritePre" },
 	config = function()
+		-- Initialize autosave as enabled by default
+		vim.g.conform_autosave_enabled = true
+		
 		require("conform").setup({
 			notify_on_error = false,
 			format_on_save = function(bufnr)
-				-- Disable with a global or buffer-local variable
-				if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+				-- Check if autosave is disabled globally or for this buffer
+				if not vim.g.conform_autosave_enabled or vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
 					return
 				end
 
@@ -23,6 +26,7 @@ return { -- Autoformat
 					-- To organize the imports.
 					"ruff_organize_imports",
 				},
+				rust = { "rustfmt" },
 				html = { "prettier" },
 				javascript = { "prettier" },
 				javascriptreact = { "prettier" },
@@ -50,6 +54,14 @@ return { -- Autoformat
 			vim.g.disable_autoformat = false
 		end, {
 			desc = "Re-enable autoformat-on-save",
+		})
+		
+		vim.api.nvim_create_user_command("FormatToggleAutosave", function()
+			vim.g.conform_autosave_enabled = not vim.g.conform_autosave_enabled
+			local status = vim.g.conform_autosave_enabled and "enabled" or "disabled"
+			print("Conform autosave " .. status)
+		end, {
+			desc = "Toggle conform autosave on/off",
 		})
 	end,
 }

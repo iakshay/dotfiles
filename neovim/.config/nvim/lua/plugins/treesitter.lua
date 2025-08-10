@@ -2,13 +2,49 @@ return {
 	{ "towolf/vim-helm", ft = "helm" },
 	{ -- Highlight, edit, and navigate code
 		"nvim-treesitter/nvim-treesitter",
+		lazy = false,
 		dependencies = {
+			"OXY2DEV/markview.nvim",
+			"nvim-tree/nvim-web-devicons",
 			"nvim-treesitter/nvim-treesitter-textobjects",
 			"nvim-treesitter/nvim-treesitter-context",
 		},
 		build = ":TSUpdate",
 		-- [[ Configure Treesitter ]] See `:help nvim-treesitter`
 		config = function()
+			-- Configure markview.nvim (must be done before treesitter setup)
+			require("markview").setup({
+				preview = {
+					filetypes = { "markdown", "quarto", "rmd", "copilot-chat", "Avante" },
+					modes = { "n", "no", "i" },
+					hybrid_modes = { "n", "i" },
+					headings = {
+						shift_width = 0,
+					},
+					callbacks = {
+						on_enable = function(_, win)
+							vim.wo[win].conceallevel = 2
+							vim.wo[win].concealcursor = ""
+						end,
+					},
+				},
+				links = { enable = true },
+				markdown = {
+					list_items = {
+						enable = false,
+						marker_minus = {
+							add_padding = false,
+						},
+						marker_plus = {
+							add_padding = false,
+						},
+						marker_star = {
+							add_padding = false,
+						},
+					},
+				}
+			})
+
 			local configs = require("nvim-treesitter.configs")
 			configs.setup({
 				ensure_installed = {

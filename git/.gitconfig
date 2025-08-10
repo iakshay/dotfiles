@@ -9,7 +9,7 @@
   puf = "!f() { B=$(git rev-parse --abbrev-ref HEAD);git push origin \"$B:akshay/$B\" --force; }; f"
 
 [core]
-  editor = vim
+	editor = neovim
   pager = delta
   excludesfile = ~/.gitignore
 
@@ -35,6 +35,7 @@
 	process = git-lfs filter-process
 	required = true
 [rebase]
+	updateRefs = true
 	updateRefs = true
 [maintenance]
 	repo = /Users/akshayaurora/Projects/core

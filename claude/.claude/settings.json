@@ -1,11 +1,7 @@
 {
   "permissions": {
-    "allow": [
-      "Bash",
-      "LS",
-      "Grep",
-      "Glob"
-    ],
+    "allow": ["Bash", "LS", "Grep", "Glob", "WebFetch(domain:github.com)"],
     "deny": []
   }
 }
+

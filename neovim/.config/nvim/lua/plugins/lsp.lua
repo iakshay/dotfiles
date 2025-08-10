@@ -119,7 +119,7 @@ return {
 					--
 					-- When you move your cursor, the highlights will be cleared (the second autocommand).
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
-					if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+					if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
 						local highlight_augroup =
 							vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
 						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
@@ -147,7 +147,9 @@ return {
 					-- code, if the language server you are using supports them
 					--
 					-- This may be unwanted, since they displace some of your code
-					if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
+					if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
+						-- Enable inlay hints by default
+						vim.lsp.inlay_hint.enable(true, { bufnr = event.buf })
 						map("<leader>th", function()
 							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
 						end, "[T]oggle Inlay [H]ints")
@@ -188,7 +190,43 @@ return {
 						},
 					},
 				},
-				-- rust_analyzer = {},
+				rust_analyzer = {
+					settings = {
+						["rust-analyzer"] = {
+							cargo = {
+								features = "all",
+							},
+							checkOnSave = {
+								enable = true,
+							},
+							check = {
+								command = "clippy",
+							},
+							imports = {
+								group = {
+									enable = false,
+								},
+							},
+							completion = {
+								postfix = {
+									enable = false,
+								},
+							},
+							inlayHints = {
+								bindingModeHints = { enable = false },
+								chainingHints = { enable = true },
+								closingBraceHints = { enable = true, minLines = 25 },
+								closureReturnTypeHints = { enable = "never" },
+								lifetimeElisionHints = { enable = "never", useParameterNames = false },
+								maxLength = 25,
+								parameterHints = { enable = true },
+								reborrowHints = { enable = "never" },
+								renderColons = true,
+								typeHints = { enable = true, hideClosureInitialization = false, hideNamedConstructor = false },
+							},
+						},
+					},
+				},
 				-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
 				--
 				-- Some languages (like typescript) have entire language plugins that can be useful:
@@ -250,6 +288,7 @@ return {
 				"prettierd",
 				"tailwindcss-language-server",
 				"helm-ls",
+				"rust-analyzer",
 				-- "kulala-fmt",
 				"stylua", -- Used to format Lua code
 			})
@@ -308,6 +347,7 @@ return {
 	},
 	{
 		"kiyoon/python-import.nvim",
+		enabled = false,	
 		-- build = "pipx install . --force",
 		build = "uv tool install . --force --reinstall",
 		keys = {

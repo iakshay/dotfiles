@@ -190,11 +190,13 @@ alias gs='git status'
 alias gc='git checkout'
 alias gd='git diff'
 alias gam='git commit -a --amend --no-edit'
-alias ge="vim $(git rev-parse --show-toplevel)/.git/config"
+function ge() {
+  vim $(git rev-parse --show-toplevel)/.git/config
+}
 alias k='kubectl'
 alias ldo="lazydocker"
 
-source ~/.dotfiles/zsh/internal.zsh
+source ~/.zsh/internal.zsh
 
 
  export NVM_DIR="$HOME/.nvm"
@@ -209,3 +211,4 @@ export PATH=$PATH:"$HOME/.cargo/bin/"
 alias pt=parquet-tools
 export RUST_BACKTRACE=full
 alias rr=rustrover
+export RUSTC_WRAPPER=$(which sccache)
