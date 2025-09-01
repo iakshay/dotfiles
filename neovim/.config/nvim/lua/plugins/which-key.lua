@@ -2,6 +2,9 @@ return { -- Useful plugin to show you pending keybinds.
 	"folke/which-key.nvim",
 	event = "VimEnter", -- Sets the loading event to 'VimEnter'
 	opts = {
+		triggers = {
+			{ "<auto>", mode = "nixsotc" }, -- exclude visual mode to prevent popup during mouse selection
+		},
 		icons = {
 			-- set icon mappings to true if you have a Nerd Font
 			mappings = vim.g.have_nerd_font,

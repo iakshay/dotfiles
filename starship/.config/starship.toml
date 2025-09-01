@@ -1,3 +1,7 @@
+# Custom format to reorder modules
+format = '$directory$custom$all'
+add_newline = true
+
 # Disable the AWS module; it's noisy
 [aws]
 disabled = true
@@ -6,16 +10,35 @@ disabled = true
 disabled = true
 
 [git_state]
-disabled = true
+disabled = false
 
 [git_status]
-disabled = true
+disabled = false
+format = '([\[$all_status$ahead_behind\]]($style) )'
 
 [nodejs]
 disabled = true
 
 [python]
 disabled = true
+
+[git_branch]
+format = '[$symbol$branch(:$remote_branch)]($style) '
+symbol = '  '
+
+[custom.main_repo]
+command = '''
+if [[ "$PWD" =~ "worktrees/([^/]+)/" ]]; then
+  echo "${match[1]}"
+elif [[ "$PWD" =~ "Projects/([^/]+)" ]]; then
+  echo "${match[1]}"
+fi
+'''
+symbol = ''
+format = '[$symbol$output]($style)'
+style = 'bold blue'
+when = 'git rev-parse --git-dir &>/dev/null'
+shell = ['zsh']
 
 [character]
 vicmd_symbol = "[N](bold blue)"

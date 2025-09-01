@@ -11,6 +11,9 @@ vim.g.loaded_python3_provider = 0
 vim.g.loaded_perl_provider = 0
 vim.g.loaded_node_provider = 0
 
+-- Session options for breakpoint persistence and proper restoration
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions,globals"
+
 -- [[ Setting options ]]
 --  For more options, you can see `:help option-list`
 
@@ -39,6 +42,12 @@ vim.opt.breakindent = true
 
 -- Save undo history
 vim.opt.undofile = true
+
+-- Disable swapfile
+vim.opt.swapfile = false
+
+-- Auto-reload files when changed externally
+vim.opt.autoread = true
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.opt.ignorecase = true
@@ -77,6 +86,9 @@ vim.opt.scrolloff = 10
 --  See `:help hlsearch`
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
+-- Manually check for file changes
+vim.keymap.set("n", "<leader>cr", "<cmd>checktime<CR>", { desc = "[C]heck for file changes and [R]eload" })
+
 -- Diagnostic keymaps
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic [Q]uickfix list" })
 
@@ -84,7 +96,7 @@ vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagn
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
 --
-vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+-- vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- TIP: Disable arrow keys in normal mode
 vim.keymap.set("n", "<left>", '<cmd>echo "Use h to move!!"<CR>')
@@ -94,16 +106,36 @@ vim.keymap.set("n", "<down>", '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
-vim.keymap.set("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })
-vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })
-vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
-vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
+-- vim.keymap.set("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })
+-- vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })
+-- vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
+-- vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
+--
+-- -- Window resizing keybinds
+-- --  Use CTRL+W+<hjkl> to resize windows
+-- vim.keymap.set("n", "<C-w><C-h>", "5<C-w><", { desc = "Decrease window width" })
+-- vim.keymap.set("n", "<C-w><C-l>", "5<C-w>>", { desc = "Increase window width" })
+-- vim.keymap.set("n", "<C-w><C-j>", "3<C-w>+", { desc = "Increase window height" })
+-- vim.keymap.set("n", "<C-w><C-k>", "3<C-w>-", { desc = "Decrease window height" })
+-- vim.keymap.set("n", "<C-w>=", "<C-w>=", { desc = "Equalize all windows" })
 
 vim.keymap.set("c", "<a-b>", "<C-left>", { desc = "Move back one word" })
 vim.keymap.set("c", "<a-f>", "<C-right>", { desc = "Move forward one word" })
 
 -- Open help in new tab
 vim.cmd("cnoreabbrev ht tab help")
+
+-- Common typo corrections
+vim.cmd("command! Q q")
+vim.cmd("command! Qa qa")
+vim.cmd("command! QA qa")
+vim.cmd("command! W w")
+vim.cmd("command! Wq wq")
+vim.cmd("command! WQ wq")
+vim.cmd("command! Wqa wqa")
+vim.cmd("command! WQA wqa")
+vim.cmd("command! X x")
+vim.cmd("command! E e")
 
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
@@ -150,6 +182,24 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	group = vim.api.nvim_create_augroup("kickstart-highlight-yank", { clear = true }),
 	callback = function()
 		vim.highlight.on_yank()
+	end,
+})
+
+-- Auto-reload buffers when files change externally
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "BufWinEnter", "CursorHold", "CursorHoldI" }, {
+	pattern = "*",
+	callback = function()
+		if vim.fn.mode() ~= "c" then
+			vim.cmd("checktime")
+		end
+	end,
+})
+
+-- Optional: Show notification when file is reloaded
+vim.api.nvim_create_autocmd("FileChangedShellPost", {
+	pattern = "*",
+	callback = function()
+		vim.notify("File reloaded: " .. vim.fn.expand("%:t"))
 	end,
 })
 

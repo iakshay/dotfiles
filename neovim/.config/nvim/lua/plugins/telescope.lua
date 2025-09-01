@@ -75,9 +75,13 @@ return { -- Fuzzy Finder (files, lsp, etc)
 				local bufnr = vim.fn.bufadd(entry.path)
 				vim.fn.bufload(bufnr)
 
-				local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
+				local params = { 
+					textDocument = {
+						uri = vim.uri_from_bufnr(bufnr)
+					}
+				}
 
-				vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", params, function(err, result, _, _)
+				vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", params, function(err, result, ctx, config)
 					if err then
 						print("Error getting document symbols: " .. vim.inspect(err))
 						return

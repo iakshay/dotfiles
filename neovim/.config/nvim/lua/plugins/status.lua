@@ -2,7 +2,10 @@
 return {
 	{
 		"nvim-lualine/lualine.nvim",
-		dependencies = { "nvim-tree/nvim-web-devicons" },
+		dependencies = { 
+			"nvim-tree/nvim-web-devicons",
+			"AndreM222/copilot-lualine",
+		},
 		config = function()
 			local function format_branch(branch)
 				if vim.fn.winwidth(0) > 100 and branch and branch ~= "" then
@@ -37,7 +40,7 @@ return {
 						"diagnostics",
 					},
 					lualine_c = { { "filename", file_status = true, path = 1 } },
-					lualine_x = {},
+					lualine_x = { "copilot" },
 					-- lualine_x = {'encoding', 'fileformat', 'filetype'},
 					lualine_y = { "progress" },
 					lualine_z = { "location" },

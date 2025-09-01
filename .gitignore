@@ -13,3 +13,4 @@ karabiner/.config/karabiner/automatic_backups
 zsh/interal.z
 neovim/.config/nvim/lua/personal/projects.lua
 zsh/internal.zsh
+lazygit/.config/lazygit/state.yml

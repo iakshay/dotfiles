@@ -2,7 +2,7 @@ return {
 	{
 		"tpope/vim-fugitive",
 		config = function()
-			vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
+			vim.keymap.set("n", "<leader>gs", vim.cmd.Git, { desc = "Git status" })
 		end,
 	},
 	-- See `:help gitsigns` to understand what the configuration keys do
@@ -45,11 +45,14 @@ return {
 						vim.api.nvim_buf_delete(blame_bufnr, { force = true })
 					else
 						-- If no blame buffer is found, show blame using Gitsigns
-						local current_win = vim.api.nvim_get_current_win()
-
 						vim.cmd("Gitsigns blame")
-
-						vim.api.nvim_set_current_win(current_win)
+						
+						-- Debug: Check what buffer type we're in after blame
+						vim.defer_fn(function()
+							local current_buf = vim.api.nvim_get_current_buf()
+							local ft = vim.api.nvim_buf_get_option(current_buf, "filetype")
+							vim.notify("After blame - Buffer: " .. current_buf .. ", Filetype: " .. ft, vim.log.levels.INFO)
+						end, 100)
 					end
 				end
 				vim.keymap.set("n", "<leader>gb", function()
@@ -60,14 +63,17 @@ return {
 					pattern = "gitsigns-blame",
 					callback = function(ev)
 						local bufnr = ev.buf
+						vim.notify("FileType autocmd triggered for gitsigns-blame buffer: " .. bufnr, vim.log.levels.INFO)
 
 						local function get_blame_data()
 							local cache = require("gitsigns.cache").cache
-							local log = require("gitsigns.debug.log")
+							
+							vim.notify("Cache contents: " .. vim.inspect(vim.tbl_keys(cache)), vim.log.levels.INFO)
 
 							-- Get the original buffer (not the blame buffer)
 							local orig_bufnr = nil
 							for buf, bcache in pairs(cache) do
+								vim.notify("Checking buffer " .. buf .. " has blame: " .. tostring(bcache.blame ~= nil), vim.log.levels.INFO)
 								if bcache.blame then
 									orig_bufnr = buf
 									break
@@ -75,18 +81,37 @@ return {
 							end
 
 							if not orig_bufnr then
-								log.dprint("No original buffer found")
+								vim.notify("No original buffer found with blame data", vim.log.levels.WARN)
 								return nil
 							end
 
 							local bcache = cache[orig_bufnr]
 							if not bcache or not bcache.blame then
-								log.dprint("Not attached or no blame data")
+								vim.notify("No blame cache for buffer " .. orig_bufnr, vim.log.levels.WARN)
 								return nil
 							end
 
 							local cursor = vim.api.nvim_win_get_cursor(0)[1]
-							return bcache.blame[cursor]
+							
+							-- The blame data is in the entries field
+							local blame_entries = bcache.blame.entries
+							if not blame_entries then
+								vim.notify("No blame entries found", vim.log.levels.WARN)
+								return nil
+							end
+							
+							vim.notify("Blame entries length: " .. #blame_entries, vim.log.levels.INFO)
+							
+							-- Get blame data for the current line
+							local blame_data = blame_entries[cursor]
+							
+							if blame_data then
+								vim.notify("Found blame data with structure: " .. vim.inspect(vim.tbl_keys(blame_data)), vim.log.levels.INFO)
+							else
+								vim.notify("No blame data for line " .. cursor .. " (entries length: " .. #blame_entries .. ")", vim.log.levels.WARN)
+							end
+							
+							return blame_data
 						end
 
 						local function safe_execute(fn, desc)
@@ -162,7 +187,7 @@ return {
 						gs.next_hunk()
 					end)
 					return "<Ignore>"
-				end, { expr = true })
+				end, { expr = true, desc = "Next Hunk" })
 
 				map("n", "[c", function()
 					if vim.wo.diff then
@@ -172,27 +197,27 @@ return {
 						gs.prev_hunk()
 					end)
 					return "<Ignore>"
-				end, { expr = true })
+				end, { expr = true, desc = "Prev Hunk" })
 
 				-- Actions
-				map({ "n", "v" }, "<leader>hs", ":Gitsigns stage_hunk<CR>")
-				map({ "n", "v" }, "<leader>hr", ":Gitsigns reset_hunk<CR>")
-				map("n", "<leader>hS", gs.stage_buffer)
-				map("n", "<leader>ha", gs.stage_hunk)
-				map("n", "<leader>hu", gs.undo_stage_hunk)
-				map("n", "<leader>hR", gs.reset_buffer)
-				map("n", "<leader>hp", gs.preview_hunk)
+				map({ "n", "v" }, "<leader>hs", ":Gitsigns stage_hunk<CR>", { desc = "Stage Hunk" })
+				map({ "n", "v" }, "<leader>hr", ":Gitsigns reset_hunk<CR>", { desc = "Reset Hunk" })
+				map("n", "<leader>hS", gs.stage_buffer, { desc = "Stage Buffer" })
+				map("n", "<leader>ha", gs.stage_hunk, { desc = "Stage Hunk" })
+				map("n", "<leader>hu", gs.undo_stage_hunk, { desc = "Undo Stage Hunk" })
+				map("n", "<leader>hR", gs.reset_buffer, { desc = "Reset Buffer" })
+				map("n", "<leader>hp", gs.preview_hunk, { desc = "Preview Hunk" })
 				map("n", "<leader>hb", function()
 					gs.blame_line({ full = true })
-				end)
-				map("n", "<leader>tB", gs.toggle_current_line_blame)
-				map("n", "<leader>hd", gs.diffthis)
+				end, { desc = "Blame Line" })
+				map("n", "<leader>tB", gs.toggle_current_line_blame, { desc = "Toggle Current Line Blame" })
+				map("n", "<leader>hd", gs.diffthis, { desc = "Diff This" })
 				map("n", "<leader>hD", function()
 					gs.diffthis("~")
-				end)
+				end, { desc = "Diff This ~" })
 
 				-- Text object
-				map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>")
+				map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "Select Hunk" })
 			end,
 		},
 	},

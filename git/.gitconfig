@@ -7,9 +7,10 @@
   br = branch
   pu = "!f() { B=$(git rev-parse --abbrev-ref HEAD);git push origin \"$B:akshay/$B\"; }; f"
   puf = "!f() { B=$(git rev-parse --abbrev-ref HEAD);git push origin \"$B:akshay/$B\" --force; }; f"
+  dirclone = "!$HOME/.dotfiles/scripts/git-dirclone"
 
 [core]
-	editor = neovim
+  editor = nvim
   pager = delta
   excludesfile = ~/.gitignore
 
@@ -35,7 +36,6 @@
 	process = git-lfs filter-process
 	required = true
 [rebase]
-	updateRefs = true
 	updateRefs = true
 [maintenance]
 	repo = /Users/akshayaurora/Projects/core
