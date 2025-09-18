@@ -46,12 +46,15 @@ return {
 					else
 						-- If no blame buffer is found, show blame using Gitsigns
 						vim.cmd("Gitsigns blame")
-						
+
 						-- Debug: Check what buffer type we're in after blame
 						vim.defer_fn(function()
 							local current_buf = vim.api.nvim_get_current_buf()
 							local ft = vim.api.nvim_buf_get_option(current_buf, "filetype")
-							vim.notify("After blame - Buffer: " .. current_buf .. ", Filetype: " .. ft, vim.log.levels.INFO)
+							vim.notify(
+								"After blame - Buffer: " .. current_buf .. ", Filetype: " .. ft,
+								vim.log.levels.INFO
+							)
 						end, 100)
 					end
 				end
@@ -63,17 +66,23 @@ return {
 					pattern = "gitsigns-blame",
 					callback = function(ev)
 						local bufnr = ev.buf
-						vim.notify("FileType autocmd triggered for gitsigns-blame buffer: " .. bufnr, vim.log.levels.INFO)
+						vim.notify(
+							"FileType autocmd triggered for gitsigns-blame buffer: " .. bufnr,
+							vim.log.levels.INFO
+						)
 
 						local function get_blame_data()
 							local cache = require("gitsigns.cache").cache
-							
+
 							vim.notify("Cache contents: " .. vim.inspect(vim.tbl_keys(cache)), vim.log.levels.INFO)
 
 							-- Get the original buffer (not the blame buffer)
 							local orig_bufnr = nil
 							for buf, bcache in pairs(cache) do
-								vim.notify("Checking buffer " .. buf .. " has blame: " .. tostring(bcache.blame ~= nil), vim.log.levels.INFO)
+								vim.notify(
+									"Checking buffer " .. buf .. " has blame: " .. tostring(bcache.blame ~= nil),
+									vim.log.levels.INFO
+								)
 								if bcache.blame then
 									orig_bufnr = buf
 									break
@@ -92,25 +101,31 @@ return {
 							end
 
 							local cursor = vim.api.nvim_win_get_cursor(0)[1]
-							
+
 							-- The blame data is in the entries field
 							local blame_entries = bcache.blame.entries
 							if not blame_entries then
 								vim.notify("No blame entries found", vim.log.levels.WARN)
 								return nil
 							end
-							
+
 							vim.notify("Blame entries length: " .. #blame_entries, vim.log.levels.INFO)
-							
+
 							-- Get blame data for the current line
 							local blame_data = blame_entries[cursor]
-							
+
 							if blame_data then
-								vim.notify("Found blame data with structure: " .. vim.inspect(vim.tbl_keys(blame_data)), vim.log.levels.INFO)
+								vim.notify(
+									"Found blame data with structure: " .. vim.inspect(vim.tbl_keys(blame_data)),
+									vim.log.levels.INFO
+								)
 							else
-								vim.notify("No blame data for line " .. cursor .. " (entries length: " .. #blame_entries .. ")", vim.log.levels.WARN)
+								vim.notify(
+									"No blame data for line " .. cursor .. " (entries length: " .. #blame_entries .. ")",
+									vim.log.levels.WARN
+								)
 							end
-							
+
 							return blame_data
 						end
 
@@ -236,6 +251,19 @@ return {
 				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", false)
 				helper.open_github_link()
 			end, { desc = "Open GitHub link" })
+		end,
+	},
+	{
+		"pwntester/octo.nvim",
+		requires = {
+			"nvim-lua/plenary.nvim",
+			"nvim-telescope/telescope.nvim",
+			-- OR 'ibhagwan/fzf-lua',
+			-- OR 'folke/snacks.nvim',
+			"nvim-tree/nvim-web-devicons",
+		},
+		config = function()
+			require("octo").setup()
 		end,
 	},
 }

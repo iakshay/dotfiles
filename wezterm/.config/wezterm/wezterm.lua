@@ -93,14 +93,15 @@ config.hide_tab_bar_if_only_one_tab = false
 config.use_fancy_tab_bar = false
 config.tab_bar_at_bottom = false
 config.show_new_tab_button_in_tab_bar = false
+config.enable_tab_bar = true -- Explicitly enable tab bar
 config.window_decorations = "RESIZE"
 
 -- Enable mouse support (like tmux mouse on)
 config.enable_scroll_bar = false
 
--- Workspaces and datetime on right status
+-- periodically update the status bar
 wezterm.on("update-right-status", function(window, pane)
-	local date = wezterm.strftime("%Y-%m-%d %H:%M")
+	local date = wezterm.strftime("%Y-%m-%d %H:%M:%S")
 	local workspace = window:active_workspace()
 
 	window:set_right_status(wezterm.format({
@@ -181,6 +182,59 @@ end)
 wezterm.on("restore_session", function(window)
 	session_manager.restore_state(window)
 end)
+
+-- Custom event handler for creating new lazygit tab
+wezterm.on("lazygit-new-tab", function(window, pane)
+	-- Get the stored directory from environment variables
+	local overrides = window:get_config_overrides() or {}
+	local env_vars = overrides.set_environment_variables or {}
+	local cwd = env_vars.LAZYGIT_CWD or pane:get_current_working_dir().file_path
+
+	-- Extract directory basename for tab title
+	local dir_name = cwd:match("([^/]+)/?$") or "lazygit"
+
+	window:perform_action(
+		act.SpawnCommandInNewTab({
+			args = { "zsh", "-l", "-c", "cd '" .. cwd .. "' && /opt/homebrew/bin/lazygit" },
+			domain = "CurrentPaneDomain",
+		}),
+		pane
+	)
+
+	-- Set the tab title to just the directory basename
+	local active_tab = window:active_tab()
+	if active_tab then
+		active_tab:set_title(dir_name)
+	end
+
+	-- Clean up the stored directory
+	env_vars.LAZYGIT_CWD = nil
+	overrides.set_environment_variables = env_vars
+	window:set_config_overrides(overrides)
+end)
+
+-- Event handler for setting lazygit tab title after workspace creation
+wezterm.on("set-lazygit-tab-title", function(window, pane)
+	local cwd = pane:get_current_working_dir()
+	local current_path = cwd and cwd.file_path or ""
+	local dir_name = current_path:match("([^/]+)/?$") or "lazygit"
+
+	local active_tab = window:active_tab()
+	if active_tab then
+		active_tab:set_title(dir_name)
+	end
+end)
+
+-- Re-run last command in previous pane
+local function rerun_last_command_in_prev_pane(window, pane)
+	local tab = window:active_tab()
+	local prev_pane = tab:get_pane_direction("Prev")
+
+	if prev_pane then
+		-- Send up arrow to get last command, then enter to execute
+		prev_pane:send_text("\x1b[A\r")
+	end
+end
 
 -- Smart-splits.nvim integration functions
 local function is_vim(pane)
@@ -461,28 +515,30 @@ config.keys = {
 			end),
 		}),
 	},
-	-- Show list of workspaces
+	-- Swap panes
 	{
 		key = "s",
 		mods = "LEADER",
-		action = act.ShowLauncherArgs({ flags = "WORKSPACES" }),
+		action = act.PaneSelect({
+			mode = "SwapWithActive",
+		}),
 	},
 	-- Session manager bindings
-	{
-		key = "s",
-		mods = "LEADER|SHIFT",
-		action = act({ EmitEvent = "save_session" }),
-	},
-	{
-		key = "L",
-		mods = "LEADER|SHIFT",
-		action = act({ EmitEvent = "load_session" }),
-	},
-	{
-		key = "R",
-		mods = "LEADER|SHIFT",
-		action = act({ EmitEvent = "restore_session" }),
-	},
+	-- {
+	-- 	key = "s",
+	-- 	mods = "LEADER|SHIFT",
+	-- 	action = act({ EmitEvent = "save_session" }),
+	-- },
+	-- {
+	-- 	key = "L",
+	-- 	mods = "LEADER|SHIFT",
+	-- 	action = act({ EmitEvent = "load_session" }),
+	-- },
+	-- {
+	-- 	key = "R",
+	-- 	mods = "LEADER|SHIFT",
+	-- 	action = act({ EmitEvent = "restore_session" }),
+	-- },
 
 	-- Pane expansion bindings (like tmux C-v, C-h, C-r)
 	{
@@ -544,14 +600,88 @@ config.keys = {
 		end),
 	},
 
-	-- Open lazygit in new tab (leader-g)
+	-- Smart lazygit: workspace toggle or new tab based on directory (leader-g)
 	{
 		key = "g",
 		mods = "LEADER",
-		action = act.SpawnCommandInNewTab({
-			args = { "zsh", "-l", "-c", "/opt/homebrew/bin/lazygit" },
-			domain = "CurrentPaneDomain",
-		}),
+		action = wezterm.action_callback(function(window, pane)
+			local current_workspace = window:active_workspace()
+			local current_cwd = pane:get_current_working_dir()
+			local current_path = current_cwd and current_cwd.file_path or ""
+
+			if current_workspace == "lazygit" then
+				-- Switch back to default workspace
+				window:perform_action(act.SwitchToWorkspace({ name = "default" }), pane)
+			else
+				-- Check if lazygit workspace exists
+				local workspaces = mux.get_workspace_names()
+				local lazygit_exists = false
+				for _, workspace in ipairs(workspaces) do
+					if workspace == "lazygit" then
+						lazygit_exists = true
+						break
+					end
+				end
+
+				if lazygit_exists then
+					-- Find lazygit workspace window and check all tabs for matching directory
+					local matching_tab_found = false
+					local lazygit_window = nil
+
+					for _, win in ipairs(mux.all_windows()) do
+						if win:get_workspace() == "lazygit" then
+							lazygit_window = win
+							local tabs = win:tabs()
+							-- Check all tabs in the lazygit workspace
+							for _, tab in ipairs(tabs) do
+								local panes = tab:panes()
+								if #panes > 0 then
+									local tab_cwd = panes[1]:get_current_working_dir()
+									local tab_path = tab_cwd and tab_cwd.file_path or ""
+									if tab_path == current_path then
+										matching_tab_found = true
+										-- Activate the matching tab
+										tab:activate()
+										break
+									end
+								end
+							end
+							if matching_tab_found then
+								break
+							end
+						end
+					end
+
+					if matching_tab_found then
+						-- Switch to lazygit workspace (the matching tab is already activated)
+						window:perform_action(act.SwitchToWorkspace({ name = "lazygit" }), pane)
+					else
+						-- Store the current directory in window user vars before switching
+						window:set_config_overrides({
+							set_environment_variables = { LAZYGIT_CWD = current_path },
+						})
+						-- Switch to lazygit workspace and emit custom event to create new tab
+						window:perform_action(act.SwitchToWorkspace({ name = "lazygit" }), pane)
+						window:perform_action(act.EmitEvent("lazygit-new-tab"), pane)
+					end
+				else
+					-- Create new lazygit workspace with lazygit running in current directory
+					local dir_name = current_path:match("([^/]+)/?$") or "lazygit"
+					window:perform_action(
+						act.SwitchToWorkspace({
+							name = "lazygit",
+							spawn = {
+								args = { "zsh", "-l", "-c", "/opt/homebrew/bin/lazygit" },
+								domain = "CurrentPaneDomain",
+							},
+						}),
+						pane
+					)
+					-- Set tab title after creating workspace
+					window:perform_action(act.EmitEvent("set-lazygit-tab-title"), pane)
+				end
+			end
+		end),
 	},
 
 	-- Toggle between k9s workspace and default workspace (leader-k)
@@ -565,47 +695,134 @@ config.keys = {
 				-- Switch back to default workspace
 				window:perform_action(act.SwitchToWorkspace({ name = "default" }), pane)
 			else
-				-- Check if k9s workspace exists
-				local workspaces = mux.get_workspace_names()
-				local k9s_exists = false
-				for _, workspace in ipairs(workspaces) do
-					if workspace == "k9s" then
-						k9s_exists = true
-						break
-					end
-				end
-
-				if k9s_exists then
-					-- Switch to existing k9s workspace
-					window:perform_action(act.SwitchToWorkspace({ name = "k9s" }), pane)
-				else
-					-- Create new k9s workspace with k9s running with proper environment
-					window:perform_action(
-						act.SwitchToWorkspace({
-							name = "k9s",
-							spawn = {
-								args = { "zsh", "-l", "-c", "/opt/homebrew/bin/k9s" },
-								domain = "CurrentPaneDomain",
-							},
-						}),
-						pane
-					)
-				end
+				-- Create new k9s workspace with k9s running with proper environment
+				window:perform_action(
+					act.SwitchToWorkspace({
+						name = "k9s",
+						spawn = {
+							args = { "zsh", "-l", "-c", "/opt/homebrew/bin/k9s" },
+							domain = "CurrentPaneDomain",
+						},
+					}),
+					pane
+				)
 			end
 		end),
 	},
 
-	-- Test workspace with zsh (leader-t)
+	-- Toggle between gh dash workspace and default workspace (leader-p)
+	{
+		key = "p",
+		mods = "LEADER",
+		action = wezterm.action_callback(function(window, pane)
+			local current_workspace = window:active_workspace()
+
+			if current_workspace == "gh-dash" then
+				-- Switch back to default workspace
+				window:perform_action(act.SwitchToWorkspace({ name = "default" }), pane)
+			else
+				window:perform_action(
+					act.SwitchToWorkspace({
+						name = "gh-dash",
+						spawn = {
+							args = { "zsh", "-l", "-c", "/opt/homebrew/bin/gh dash" },
+							domain = "CurrentPaneDomain",
+						},
+					}),
+					pane
+				)
+			end
+		end),
+	},
+
+	-- Toggle between btop workspace and default workspace (leader-t)
 	{
 		key = "t",
 		mods = "LEADER",
-		action = act.SwitchToWorkspace({
-			name = "test",
-			spawn = {
-				args = { "zsh", "-l" },
-			},
-		}),
+		action = wezterm.action_callback(function(window, pane)
+			local current_workspace = window:active_workspace()
+
+			if current_workspace == "btop" then
+				-- Switch back to default workspace
+				window:perform_action(act.SwitchToWorkspace({ name = "default" }), pane)
+			else
+				-- Create new btop workspace with btop running
+				window:perform_action(
+					act.SwitchToWorkspace({
+						name = "btop",
+						spawn = {
+							args = { "zsh", "-l", "-c", "/opt/homebrew/bin/btop" },
+							domain = "CurrentPaneDomain",
+						},
+					}),
+					pane
+				)
+			end
+		end),
 	},
+
+	-- Cycle through workspaces with Ctrl+backtick
+	{
+		key = "`",
+		mods = "CTRL",
+		action = act.SwitchWorkspaceRelative(1),
+	},
+	{
+		key = "`",
+		mods = "CTRL|SHIFT",
+		action = act.SwitchWorkspaceRelative(-1),
+	},
+	-- Cycle through workspaces with CMD+backtick
+	{
+		key = "`",
+		mods = "CMD",
+		action = act.SwitchWorkspaceRelative(1),
+	},
+	{
+		key = "`",
+		mods = "CMD|SHIFT",
+		action = act.SwitchWorkspaceRelative(-1),
+	},
+	{
+		key = "Enter",
+		mods = "SHIFT",
+		action = wezterm.action({ SendString = "\x1b\r" }),
+	},
+	{
+		key = "y",
+		mods = "LEADER",
+		action = act.PaneSelect({ show_pane_ids = true }),
+	},
+
+	-- Re-run last command in previous pane (LEADER+R)
+	{
+		key = "r",
+		mods = "LEADER",
+		action = wezterm.action_callback(rerun_last_command_in_prev_pane),
+	},
+
+	-- Re-run last command in previous pane (CMD+R)
+	{
+		key = "r",
+		mods = "CMD",
+		action = wezterm.action_callback(rerun_last_command_in_prev_pane),
+	},
+
+	-- Switch to default workspace with Escape key, or emit escape if already in default
+	-- {
+	-- 	key = "Escape",
+	-- 	mods = "NONE",
+	-- 	action = wezterm.action_callback(function(window, pane)
+	-- 		local current_workspace = window:active_workspace()
+	-- 		if current_workspace ~= "default" then
+	-- 			-- Switch to default workspace if not already there
+	-- 			window:perform_action(act.SwitchToWorkspace({ name = "default" }), pane)
+	-- 		else
+	-- 			-- Emit escape key if already in default workspace
+	-- 			window:perform_action(act.SendKey({ key = "Escape" }), pane)
+	-- 		end
+	-- 	end),
+	-- },
 }
 
 -- Set copy mode to use vim keybindings (like tmux)
@@ -692,161 +909,8 @@ config.key_tables = {
 }
 config.launch_menu = {
 	{
-		-- Optional label to show in the launcher. If omitted, a label
-		-- is derived from the `args`
 		label = "Zsh",
-		-- The argument array to spawn.  If omitted the default program
-		-- will be used as described in the documentation above
 		args = { "zsh", "-l" },
-
-		-- You can specify an alternative current working directory;
-		-- if you don't specify one then a default based on the OSC 7
-		-- escape sequence will be used (see the Shell Integration
-		-- docs), falling back to the home directory.
-		-- cwd = "/some/path"
-
-		-- You can override environment variables just for this command
-		-- by setting this here.  It has the same semantics as the main
-		-- set_environment_variables configuration option described above
-		-- set_environment_variables = { FOO = "bar" },
 	},
 }
-
--- wezterm.on("trigger-vim-with-scrollback", function(window, pane)
--- 	local scrollback_text = pane:get_lines_as_text(pane:get_dimensions().scrollback_rows)
--- 	wezterm:log_info("debug")
--- 	-- Create a temporary file to pass to vim
--- 	local name = os.tmpname()
--- 	local f = io.open(name, "w+")
--- 	f:write(scrollback_text)
--- 	f:flush()
--- 	f:close()
---
--- 	-- Open a new tab running vim and tell it to open the file
--- 	window:perform_action(
--- 		act.SpawnCommandInNewTab({
--- 			args = { "vim", name },
--- 		}),
--- 		pane
--- 	)
---
--- 	-- Wait "enough" time for vim to read the file before we remove it.
--- 	-- The window creation and process spawn are asynchronous wrt. running
--- 	-- this script and are not awaitable, so we just pick a number.
--- 	--
--- 	-- Note: We don't strictly need to remove this file, but it is nice
--- 	-- to avoid cluttering up the temporary directory.
--- 	wezterm.sleep_ms(1000)
--- 	os.remove(name)
--- end)
-
--- table.insert(config.keys, {
--- 	key = "E",
--- 	mods = "CTRL",
--- 	-- See also https://wezfurlong.org/wezterm/config/lua/wezterm/action_callback.html
--- 	action = act.EmitEvent("trigger-vim-with-scrollback"),
--- })
---
--- -- https://github.com/folke/zen-mode.nvim?tab=readme-ov-file#wezterm
--- wezterm.on("user-var-changed", function(window, pane, name, value)
--- 	local overrides = window:get_config_overrides() or {}
--- 	if name == "ZEN_MODE" then
--- 		local incremental = value:find("+")
--- 		local number_value = tonumber(value)
--- 		if incremental ~= nil then
--- 			while number_value > 0 do
--- 				window:perform_action(wezterm.action.IncreaseFontSize, pane)
--- 				number_value = number_value - 1
--- 			end
--- 			overrides.enable_tab_bar = false
--- 		elseif number_value < 0 then
--- 			window:perform_action(wezterm.action.ResetFontSize, pane)
--- 			overrides.font_size = nil
--- 			overrides.enable_tab_bar = true
--- 		else
--- 			overrides.font_size = number_value
--- 			overrides.enable_tab_bar = false
--- 		end
--- 	end
--- 	window:set_config_overrides(overrides)
--- end)
---
--- -- Automatically change font size based on the display
--- wezterm.on("window-resized", function(window, pane)
---   -- Get information about the screen the pane is on
---   local output = pane:get_containing_output()
---   if not output then
---     return
---   end
---
---   -- Log the output name for debugging. This is how you find the
---   -- exact name of your monitors!
---   wezterm.log_info("Window resized on output: ", output.name)
---
---   local overrides = window:get_config_overrides() or {}
---
---   -- Check the name of the monitor and set font size accordingly
---   -- TODO: Use the CMD+SHIFT+I shortcut to find your display names
---   -- and customize this section.
---   if output.name == "Color LCD" then
---     -- This is typically the built-in MacBook display
---     overrides.font_size = 13.0
---   else
---     -- This will apply to any other display
---     overrides.font_size = 16.0
---   end
---
---   window:set_config_overrides(overrides)
--- end)
---
--- -- Keybinding to show current display name
--- table.insert(config.keys, {
--- 	key = "I", -- Stands for "Info"
--- 	mods = "CMD|SHIFT",
--- 	action = wezterm.action_callback(function(window, pane)
--- 		local output = pane:get_containing_output()
--- 		if output then
--- 			local message = "Current display name: '" .. output.name .. "'"
--- 			wezterm.toast_notification("Display Info", message, nil, 3000)
--- 			wezterm.log_info(message)
--- 		else
--- 			wezterm.log_info("Could not determine display for the current pane.")
--- 		end
--- 	end),
--- })
-
--- wezterm.on('open-uri', function(window, pane, uri)
---   wezterm.log_info uri
---   -- wezterm.log_info uri
---   -- otherwise, by not specifying a return value, we allow later
---   -- handlers and ultimately the default action to caused the
---   -- URI to be opened in the browser
---   return true
--- end)
-
--- wezterm.log_info wezterm.default_hyperlink_rules()
-
--- function printTable(t)
--- 	for key, value in pairs(t) do
--- 		if type(value) == "table" then
--- 			print(key .. ":")
--- 			printTable(value) -- Recursively print nested tables
--- 		else
--- 			print(key .. ": " .. tostring(value))
--- 		end
--- 	end
--- end
-
--- Example usage
--- myTable = {
--- 	name = "Alice",
--- 	age = 30,
--- 	hobbies = { "reading", "sports" },
--- 	address = {
--- 		city = "Wonderland",
--- 		zip = "12345",
--- 	},
--- }
-
--- printTable(wezterm.default_hyperlink_rules())
 return config

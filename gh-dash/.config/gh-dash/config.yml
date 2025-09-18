@@ -1,0 +1,66 @@
+prSections:
+  - title: My Pull Requests
+    filters: is:open author:@me repo:langchain-ai/smithdb repo:langchain-ai/deployments
+    type: null
+  - title: Needs My Review
+    filters: is:open review-requested:@me repo:langchain-ai/smithdb
+    type: null
+  - title: Involved
+    filters: is:open involves:@me -author:@me
+    type: null
+  - title: Merged Recently
+    filters: is:merged is:closed repo:langchain-ai/smithdb repo:langchain-ai/deployments author:@me
+    type: null
+repo:
+  branchesRefetchIntervalSeconds: 30
+  prsRefetchIntervalSeconds: 60
+defaults:
+  preview:
+    open: true
+    width: 250
+  prsLimit: 20
+  prApproveComment: LGTM
+  issuesLimit: 20
+  view: prs
+  layout:
+    prs:
+      updatedAt:
+        width: 5
+      createdAt:
+        width: 5
+      repo:
+        width: 20
+      author:
+        width: 15
+      authorIcon:
+        hidden: false
+      assignees:
+        width: 20
+        hidden: true
+      base:
+        width: 15
+        hidden: true
+      lines:
+        width: 15
+  refetchIntervalMinutes: 30
+keybindings:
+  universal: []
+  issues: []
+  prs:
+    - key: R
+      name: rerun checks
+      command: >
+        gh pr checks {{.PrNumber}} --repo {{.RepoName}} --json link --jq '.[].link' | grep -o 'runs/[0-9]*' | cut -d/ -f2 | sort -u | xargs -n1 gh run rerun --repo {{.RepoName}}
+  branches: []
+repoPaths: {}
+theme:
+  ui:
+    sectionsShowCount: true
+    table:
+      showSeparator: true
+      compact: false
+pager:
+  diff: ""
+confirmQuit: true
+showAuthorIcons: true
+smartFilteringAtLaunch: true

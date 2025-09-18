@@ -154,7 +154,7 @@ return {
 						map("<leader>dt", "<cmd>RustLsp debug<cr>", "[D]ebug [T]est at cursor")
 
 						-- LSP management keybindings
-						map("<leader>rs", "<cmd>RustLsp restart<cr>", "[R]ust LSP Re[s]tart")
+						map("<leader>rs", "<cmd>RustAnalyzer restart<cr>", "[R]ust LSP Re[s]tart")
 						map("<leader>rl", "<cmd>RustLsp logFile<cr>", "[R]ust LSP [L]og File")
 						map("<leader>rh", "<cmd>checkhealth rustaceanvim<cr>", "[R]ust [H]ealth Check")
 

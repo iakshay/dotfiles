@@ -174,7 +174,7 @@ return { -- Fuzzy Finder (files, lsp, etc)
 						["<C-k>"] = document_symbols_for_selected,
 					},
 				},
-				file_ignore_patterns = { "^.git", "node_modules", "experimental", "assets", "research", "dawn" },
+				file_ignore_patterns = { "^.git/", "node_modules", "experimental", "assets", "research", "dawn" },
 				vimgrep_arguments = {
 					"rg",
 					"--color=never",

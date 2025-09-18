@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:wezterm.org)",
+      "WebFetch(domain:wezfurlong.org)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/akshay.aurora/.zsh"
+    ]
+  }
+}

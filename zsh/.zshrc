@@ -9,7 +9,17 @@ mkdir -p "$HOME/.zsh"
 eval "$(starship init zsh)"
 
 # Increase function nesting limit for starship
-export FUNCNEST=2000
+export FUNCNEST=5000
+
+# Enable vi mode
+bindkey -v
+# Reduce key delay for mode switching
+export KEYTIMEOUT=1
+
+# Fix backspace and delete in vi mode
+bindkey -v '^?' backward-delete-char
+bindkey -v '^H' backward-delete-char
+bindkey -v '^[[3~' delete-char
 
 # export PYENV_ROOT="$HOME/.pyenv"
 # command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
@@ -23,6 +33,29 @@ autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '^xe' edit-command-line
 bindkey '^x^e' edit-command-line
+
+# Prevent the command from being written to history before it's
+# executed; save it to LASTHIST instead.  Write it to history
+# in precmd.
+#
+# called before a history line is saved.  See zshmisc(1).
+function zshaddhistory() {
+  # Remove line continuations since otherwise a "\" will eventually
+  # get written to history with no newline.
+  LASTHIST=${1//\\$'\n'/}
+  # Return value 2: "... the history line will be saved on the internal
+  # history list, but not written to the history file".
+  return 2
+}
+
+# zsh hook called before the prompt is printed.  See zshmisc(1).
+function precmd() {
+  # Write the last command if successful, using the history buffered by
+  # zshaddhistory().
+  if [[ $? == 0 && -n ${LASTHIST//[[:space:]\n]/} && -n $HISTFILE ]] ; then
+    print -sr -- ${=${LASTHIST%%'\n'}}
+  fi
+}
 
 # Line navigation bindings
 bindkey '^A' beginning-of-line  # Ctrl-A
@@ -40,23 +73,19 @@ bindkey '^[b' backward-word   # Alt-b
 HISTFILE=~/.zsh_history
 
 # Set the number of history lines to save
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=5000000
+SAVEHIST=$HISTSIZE
 
-# Share history between terminals (tmux panes or new Zsh sessions)
-setopt inc_append_history      # Immediately append history to the history file
-setopt share_history           # Share history across sessions
-setopt hist_ignore_all_dups     # Avoid duplicated entries
-
-# Optional: Don't record commands that start with a space
-setopt hist_ignore_space
-
-# Optional: Automatically merge history from other sessions before each command
-# autoload -Uz add-zsh-hook
-# load_shared_history() {
-#   fc -R
-# }
-# add-zsh-hook preexec load_shared_history
+# HISTORY
+setopt EXTENDED_HISTORY          # Write the history file in the ':start:elapsed;command' format.
+setopt HIST_EXPIRE_DUPS_FIRST    # Expire a duplicate event first when trimming history.
+setopt HIST_FIND_NO_DUPS         # Do not display a previously found event.
+setopt HIST_IGNORE_ALL_DUPS      # Delete an old recorded event if a new event is a duplicate.
+setopt HIST_IGNORE_DUPS          # Do not record an event that was just recorded again.
+setopt HIST_IGNORE_SPACE         # Do not record an event starting with a space.
+setopt HIST_SAVE_NO_DUPS         # Do not write a duplicate event to the history file.
+setopt SHARE_HISTORY             # Share history between all sessions.
+# END HISTORY
 
 # Initialize zsh completion system with caching
 autoload -Uz compinit
@@ -81,86 +110,10 @@ bindkey '^y' autosuggest-accept            # Accept autosuggestion
 
 
 # ---- FZF -----
-# if [[ ! -a "$HOME/.zsh/fzf-git.sh" ]]; then
-#   git clone https://github.com/junegunn/fzf-git.sh "$HOME/.zsh/fzf-git.sh"
-# fi
-# fpath+=("$HOME/.zsh/fzf-git.sh/")
+source <(fzf --zsh)
+export FZF_COMPLETION_DIR_COMMANDS="cd pushd rmdir tree"
 
-# autoload -Uz fzf-git
-# source ~/.zsh/fzf-git.sh/fzf-git.sh
-
-
-# Set up fzf key bindings and fuzzy completion - lazy loaded
-# _lazy_load_fzf() {
-#     unset -f _lazy_load_fzf
-#     eval "$(fzf --zsh)"
-#     # Re-bind the key that triggered this
-#     if [[ "$1" == "ctrl-t" ]]; then
-#         zle fzf-file-widget
-#     elif [[ "$1" == "ctrl-r" ]]; then
-#         zle fzf-history-widget
-#     elif [[ "$1" == "alt-c" ]]; then
-#         zle fzf-cd-widget
-#     fi
-# }
-
-# Create stub widgets that trigger lazy loading
-# fzf-file-widget() { _lazy_load_fzf "ctrl-t" }
-# fzf-history-widget() { _lazy_load_fzf "ctrl-r" }
-# fzf-cd-widget() { _lazy_load_fzf "alt-c" }
-#
-# zle -N fzf-file-widget
-# zle -N fzf-history-widget  
-# zle -N fzf-cd-widget
-#
-# bindkey '^T' fzf-file-widget
-# bindkey '^R' fzf-history-widget
-# bindkey '^[c' fzf-cd-widget
-# FZF_COPY_TO_CLIPBOARD_SPACE_SEPERATED_LIST="execute-silent(echo -n {+} | pbcopy)+abort"
-# FZF_COPY_TO_CLIPBOARD_NEWLINE_SEPERATED_LIST="execute-silent(cat {+f} | perl -pe \"chomp if eof\" | pbcopy)+abort"
-#
-# FZF_DEFAULT_OPTS="--no-mouse --height 50% -1 --reverse --multi --inline-info --preview='[[ \\\$(file --mime (}) =~ binary 1] && echo (} is a binary file || (bat --style=numbers --color=always (} || cat (}) 2> /dev/null | head -300' --preview-window='right:hidden:wrap' --bind='f3:execute(bat --style=numbers {} || less -f (}),f2:toggle-preview,ctrl-d:half-page-down,ctrl-u:half-page-up,ctrl-y:$FZF_COPY_TO_CLIPBOARD_NEWLINE_SEPERATED_LIST'"
-# export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS' --color=fg:-1,bg:-1,hl:#5f87af --color=fg+:#d0d0d0,bg+:#262626,hl+:#5fd7ff --color=info:#afaf87,prompt:#d7005f,pointer:#af5fff --color=marker:#87ff00,spinner:#af5fff,header:#87afaf'
-#
-# # -- Use fd instead of fzf --
-#
-# export FZF_DEFAULT_COMMAND="fd --hidden --strip-cwd-prefix --exclude .git --exclude .pyenv --exclude node_modules"
-# export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-# export FZF_ALT_C_COMMAND="fd --type=d --hidden --strip-cwd-prefix --exclude .git --exclude .pyenv --exclude node_modules"
-#
-# Use fd (https://github.com/sharkdp/fd) for listing path candidates.
-# - The first argument to the function ($1) is the base path to start traversal
-# - See the source code (completion.{bash,zsh}) for the details.
-# _fzf_compgen_path() {
-#   fd --hidden --exclude .git . "$1"
-# }
-#
-# # Use fd to generate the list for directory completion
-# _fzf_compgen_dir() {
-#   fd --type=d --hidden --exclude .git . "$1"
-# }
-#
-#
-# show_file_or_dir_preview="if [ -d {} ]; then eza --tree --color=always {} | head -200; else bat -n --color=always --line-range :500 {}; fi"
-#
-# export FZF_CTRL_T_OPTS="--preview '$show_file_or_dir_preview'"
-# export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
-#
-# # Advanced customization of fzf options via _fzf_comprun function
-# # - The first argument to the function is the name of the command.
-# # - You should make sure to pass the rest of the arguments to fzf.
-# _fzf_comprun() {
-#   local command=$1
-#   shift
-#
-#   case "$command" in
-#     cd)           fzf --preview 'eza --tree --color=always {} | head -200' "$@" ;;
-#     export|unset) fzf --preview "eval 'echo \\\${}'"         "$@" ;;
-#     ssh)          fzf --preview 'dig {}'                   "$@" ;;
-#     *)            fzf --preview "$show_file_or_dir_preview" "$@" ;;
-#   esac
-# }
-# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+alias pf="fzf --preview='bat {}' --bind shift-up:preview-page-up,shift-down:preview-page-down"
 
 # ----- Bat (better cat) -----
 export BAT_THEME=gruvbox-dark
@@ -205,6 +158,7 @@ alias gc='git checkout'
 alias gd='git diff'
 alias gam='git commit -a --amend --no-edit'
 alias gwl='git worktree list'
+alias wip='git add . && git commit -m "wip"'
 function ge() {
   vim $(git rev-parse --show-toplevel)/.git/config
 }
@@ -220,6 +174,14 @@ _lazy_load_gh_copilot() {
 ghcs() { _lazy_load_gh_copilot "$@" }
 ghce() { _lazy_load_gh_copilot "$@" }
 
+function gl() {
+  local lines=5
+  if [[ "$1" =~ ^-[0-9]+$ ]]; then
+    lines=${1#-}
+    shift
+  fi
+  git log --pretty=format:"%C(yellow)%h %C(red)%ad %C(blue)%an%C(reset) %s %C(green)%D" --date=short --decorate -$lines "$@"
+}
 
 # ---- Node Version Manager (nvm) ----
 # export NVM_DIR="$HOME/.nvm"
@@ -227,7 +189,6 @@ ghce() { _lazy_load_gh_copilot "$@" }
 #   [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 
-export PATH="$PATH:/Users/akshay.aurora/.nvm/versions/node/v24.2.0/bin"
 # ---- Python----
 _lazy_load_pyenv() {
     unset -f pyenv
@@ -258,11 +219,13 @@ source ~/.zsh/internal.zsh
 source ~/.dotfiles/scripts/worktree-manager.zsh
 source ~/.dotfiles/scripts/cargo-worktree-target.zsh
 
+# Docker
+alias docker='podman'
+alias d='docker'
 
 # Rust
 export PATH=$PATH:"$HOME/.cargo/bin/"
-export RUST_BACKTRACE=full
-export RUSTC_WRAPPER=$(which sccache)
+export RUST_BACKTRACE=0
 
 
 
@@ -271,7 +234,6 @@ alias 'git?'='ghcs -t git'
 alias 'explain'='gh copilot explain'
 
 alias k='kubectl'
-alias ldo="lazydocker"
 alias pt=parquet-tools
 alias neovim=nvim
 alias vim=nvim
