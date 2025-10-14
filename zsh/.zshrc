@@ -239,8 +239,8 @@ alias neovim=nvim
 alias vim=nvim
 alias ls="eza --icons=always"
 alias lintfix="cargo clippy --all-targets --all-features --fix -- -D warnings"
-alias lint="cargo clippy --all-targets --all-features -- -D warnings"
-alias autoformat="cargo fmt --all"
+alias lint="cargo machete && cargo clippy --all-targets --all-features -- -D warnings"
+alias autoformat="cargo fmt --all && taplo fmt"
 alias af=autoformat
 alias lf=lintfix
 alias fmt=autoformat

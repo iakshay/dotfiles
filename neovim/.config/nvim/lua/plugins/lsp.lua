@@ -31,115 +31,9 @@ return {
 			"hrsh7th/cmp-nvim-lsp",
 		},
 		config = function()
-			-- LSP inactivity shutdown timer (5 minutes)
-			local lsp_timers = {}
-			local stopped_servers = {} -- Track which servers were stopped for each buffer
-			local inactivity_timeout = 5 * 60 * 1000 -- 5 minutes in milliseconds
-
-			local function reset_timer(client_id)
-				if lsp_timers[client_id] then
-					lsp_timers[client_id]:stop()
-					lsp_timers[client_id]:close()
-				end
-
-				lsp_timers[client_id] = vim.defer_fn(function()
-					local client = vim.lsp.get_client_by_id(client_id)
-					if client and client.name ~= "copilot" then
-						-- Store server info for potential restart
-						for _, buf in ipairs(vim.lsp.get_buffers_by_client_id(client_id)) do
-							if not stopped_servers[buf] then
-								stopped_servers[buf] = {}
-							end
-							stopped_servers[buf][client.name] = {
-								name = client.name,
-								config = client.config,
-							}
-						end
-
-						vim.notify("Stopping LSP server '" .. client.name .. "' due to inactivity", vim.log.levels.INFO)
-						client.stop()
-					end
-					lsp_timers[client_id] = nil
-				end, inactivity_timeout)
-			end
-
-			local function restart_buffer_lsp(bufnr)
-				local buf_stopped = stopped_servers[bufnr]
-				if not buf_stopped then
-					return
-				end
-
-				local filetype = vim.bo[bufnr].filetype
-				if not filetype or filetype == "" then
-					return
-				end
-
-				-- Check if any servers should be running for this filetype
-				for server_name, server_info in pairs(buf_stopped) do
-					-- Check if server is already running
-					local already_running = false
-					for _, client in pairs(vim.lsp.get_clients({ name = server_name })) do
-						if vim.tbl_contains(vim.lsp.get_buffers_by_client_id(client.id), bufnr) then
-							already_running = true
-							break
-						end
-					end
-
-					if not already_running then
-						vim.notify("Restarting LSP server '" .. server_name .. "' for buffer", vim.log.levels.INFO)
-						require("lspconfig")[server_name].setup(server_info.config)
-						local client_id = vim.lsp.start_client(server_info.config)
-						if client_id then
-							vim.lsp.buf_attach_client(bufnr, client_id)
-							vim.notify("LSP server '" .. server_name .. "' started successfully", vim.log.levels.INFO)
-						else
-							vim.notify("Failed to start LSP server '" .. server_name .. "'", vim.log.levels.ERROR)
-						end
-					end
-				end
-
-				-- Clear the stopped servers for this buffer
-				stopped_servers[bufnr] = nil
-			end
-
-			local function track_lsp_activity()
-				for _, client in pairs(vim.lsp.get_clients()) do
-					reset_timer(client.id)
-				end
-			end
-
-			-- Track activity and restart LSP if needed
-			local activity_events = {
-				"CursorMoved",
-				"CursorMovedI",
-				"InsertEnter",
-				"InsertLeave",
-				"TextChanged",
-				"TextChangedI",
-				"BufEnter",
-			}
-			vim.api.nvim_create_autocmd(activity_events, {
-				group = vim.api.nvim_create_augroup("lsp-activity-tracker", { clear = true }),
-				callback = function(event)
-					-- Try to restart LSP for this buffer if it was stopped on any activity
-					restart_buffer_lsp(event.buf)
-					track_lsp_activity()
-				end,
-			})
-
-			-- Clean up stopped servers tracking when buffers are deleted
-			vim.api.nvim_create_autocmd("BufDelete", {
-				group = vim.api.nvim_create_augroup("lsp-buffer-cleanup", { clear = true }),
-				callback = function(event)
-					stopped_servers[event.buf] = nil
-				end,
-			})
-
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("kickstart-lsp-attach", { clear = true }),
 				callback = function(event)
-					-- Start inactivity timer for the attached LSP client
-					reset_timer(event.data.client_id)
 
 					local opts = { buffer = event.buf }
 					vim.keymap.set("n", "gd", function()
@@ -246,13 +140,6 @@ return {
 							callback = function(event2)
 								vim.lsp.buf.clear_references()
 								vim.api.nvim_clear_autocmds({ group = "kickstart-lsp-highlight", buffer = event2.buf })
-								-- Clean up timer when LSP detaches
-								local client_id = event2.data.client_id
-								if lsp_timers[client_id] then
-									lsp_timers[client_id]:stop()
-									lsp_timers[client_id]:close()
-									lsp_timers[client_id] = nil
-								end
 							end,
 						})
 					end

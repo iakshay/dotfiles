@@ -113,44 +113,20 @@ function M.get_github_file_url()
 	-- Get the GitHub remote URL
 	local remote_url = M.get_github_repo_url()
 
-	-- Get the default branch from remote
-	local branch
-	
-	-- Try to get default branch from remote HEAD
-	local default_branch_job = Job:new({
-		command = "bash",
-		args = { "-c", "git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'" },
+	-- Get the current commit hash
+	local commit_hash_job = Job:new({
+		command = "git",
+		args = { "rev-parse", "HEAD" },
 	})
 	
-	local default_result = default_branch_job:sync()
+	local commit_result = commit_hash_job:sync()
 	
-	if default_result and #default_result > 0 and default_result[1] ~= "" then
-		branch = vim.trim(default_result[1])
-	else
-		-- Fallback: get default branch from remote show
-		local remote_show_job = Job:new({
-			command = "bash",
-			args = { "-c", "git remote show origin 2>/dev/null | grep 'HEAD branch' | cut -d' ' -f5" },
-		})
-		
-		local remote_result = remote_show_job:sync()
-		
-		if remote_result and #remote_result > 0 and remote_result[1] ~= "" then
-			branch = vim.trim(remote_result[1])
-		else
-			-- Final fallback: use current branch
-			local current_branch_job = Job:new({
-				command = "git",
-				args = { "rev-parse", "--abbrev-ref", "HEAD" },
-			})
-			local current_result = current_branch_job:sync()
-			if current_result and #current_result > 0 then
-				branch = vim.trim(current_result[1])
-			else
-				branch = "main" -- Ultimate fallback
-			end
-		end
+	if not commit_result or #commit_result == 0 or commit_result[1] == "" then
+		vim.notify("Failed to get current commit hash", vim.log.levels.ERROR)
+		return nil
 	end
+	
+	local commit_hash = vim.trim(commit_result[1])
 	
 
 	-- Get the relative file path in the repository
@@ -175,8 +151,8 @@ function M.get_github_file_url()
 
 	-- print(repo_root, file_path)
 	local relative_path = file_path:sub(#repo_root + 2)
-	-- Construct the GitHub link
-	local github_link = string.format("%s/blob/%s/%s%s", remote_url, branch, relative_path, line_part)
+	-- Construct the GitHub link using commit hash
+	local github_link = string.format("%s/blob/%s/%s%s", remote_url, commit_hash, relative_path, line_part)
 	return github_link
 end
 

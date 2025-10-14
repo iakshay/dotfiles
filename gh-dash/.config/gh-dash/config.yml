@@ -11,6 +11,9 @@ prSections:
   - title: Merged Recently
     filters: is:merged is:closed repo:langchain-ai/smithdb repo:langchain-ai/deployments author:@me
     type: null
+  - title: Merged Recently (all)
+    filters: is:merged is:closed repo:langchain-ai/smithdb
+    type: null
 repo:
   branchesRefetchIntervalSeconds: 30
   prsRefetchIntervalSeconds: 60
