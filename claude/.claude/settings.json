@@ -5,9 +5,12 @@
       "LS",
       "Grep",
       "Glob",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Read(~/Projects/**)",
+      "Read(~/worktrees/**)"
     ],
     "deny": []
   },
+  "model": "opus",
   "alwaysThinkingEnabled": true
 }

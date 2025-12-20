@@ -40,3 +40,5 @@
 [maintenance]
 	repo = /Users/akshayaurora/Projects/core
 	repo = /Users/akshay.aurora/Projects/smithdb
+[url "git@github.com:"]
+	insteadOf = https://github.com/

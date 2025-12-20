@@ -11,8 +11,9 @@ function _set_cargo_target_dir() {
       local main_repo_path=$(dirname "$common_git_dir")
       local project_name=$(basename "$main_repo_path")
       
-      # Set Docker Compose project name based on main repo
+      # Set Docker Compose project name and directory based on main repo
       export COMPOSE_PROJECT_NAME="$project_name"
+      export COMPOSE_PROJECT_DIR="$main_repo_path"
       
       if [[ -f "$main_repo_path/Cargo.toml" ]]; then
         export CARGO_TARGET_DIR="$main_repo_path/target"
@@ -30,9 +31,10 @@ function _set_cargo_target_dir() {
       unset CARGO_TARGET_DIR
     fi
   else
-    # Clear both variables if we're not in a git repo
+    # Clear all variables if we're not in a git repo
     unset CARGO_TARGET_DIR
     unset COMPOSE_PROJECT_NAME
+    unset COMPOSE_PROJECT_DIR
   fi
 }
 

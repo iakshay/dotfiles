@@ -1,7 +1,7 @@
 return { -- Fuzzy Finder (files, lsp, etc)
 	"nvim-telescope/telescope.nvim",
 	event = "VimEnter",
-	branch = "0.1.x",
+	branch = "master", -- Use latest master instead of 0.1.x for better Neovim 0.10+ support
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 		{ -- If encountering errors, see telescope-fzf-native README for installation instructions

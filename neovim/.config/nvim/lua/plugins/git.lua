@@ -51,10 +51,10 @@ return {
 						vim.defer_fn(function()
 							local current_buf = vim.api.nvim_get_current_buf()
 							local ft = vim.api.nvim_buf_get_option(current_buf, "filetype")
-							vim.notify(
-								"After blame - Buffer: " .. current_buf .. ", Filetype: " .. ft,
-								vim.log.levels.INFO
-							)
+							-- vim.notify(
+							-- 	"After blame - Buffer: " .. current_buf .. ", Filetype: " .. ft,
+							-- 	vim.log.levels.INFO
+							-- )
 						end, 100)
 					end
 				end

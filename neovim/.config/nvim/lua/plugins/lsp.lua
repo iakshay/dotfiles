@@ -31,6 +31,34 @@ return {
 			"hrsh7th/cmp-nvim-lsp",
 		},
 		config = function()
+			-- Configure diagnostic display
+			vim.diagnostic.config({
+				virtual_text = {
+					spacing = 4,
+					prefix = "●",
+					severity = {
+						min = vim.diagnostic.severity.HINT,
+					},
+				},
+				signs = {
+					text = {
+						[vim.diagnostic.severity.ERROR] = " ",
+						[vim.diagnostic.severity.WARN] = " ",
+						[vim.diagnostic.severity.HINT] = " ",
+						[vim.diagnostic.severity.INFO] = " ",
+					},
+				},
+				underline = true,
+				update_in_insert = false, -- Don't update diagnostics while typing
+				severity_sort = true,
+				float = {
+					border = "rounded",
+					source = "always",
+					header = "",
+					prefix = "",
+				},
+			})
+
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("kickstart-lsp-attach", { clear = true }),
 				callback = function(event)
@@ -114,34 +142,99 @@ return {
 					--  For example, in C this would take you to the header.
 					map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
 
-					-- The following two autocommands are used to highlight references of the
-					-- word under your cursor when your cursor rests there for a little while.
-					--    See `:help CursorHold` for information about when this is executed
-					--
-					-- When you move your cursor, the highlights will be cleared (the second autocommand).
+					-- Enable inlay hints for supported languages and add toggle
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
-					if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
-						local highlight_augroup =
-							vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
-						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-							buffer = event.buf,
-							group = highlight_augroup,
-							callback = vim.lsp.buf.document_highlight,
-						})
+					if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
+						-- Enable inlay hints by default
+						vim.lsp.inlay_hint.enable(true, { bufnr = event.buf })
+						-- Add keybinding to toggle inlay hints
+						map("<leader>th", function()
+							vim.lsp.inlay_hint.enable(
+								not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }),
+								{ bufnr = event.buf }
+							)
+						end, "[T]oggle Inlay [H]ints")
+					end
 
-						vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-							buffer = event.buf,
-							group = highlight_augroup,
-							callback = vim.lsp.buf.clear_references,
-						})
+					-- Document highlighting is disabled by default for performance.
+					-- Uncomment the section below to enable highlighting references under cursor.
+					-- Note: This can impact performance on large files.
+					--
+					-- if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+					-- 	local highlight_augroup = vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
+					-- 	vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+					-- 		buffer = event.buf,
+					-- 		group = highlight_augroup,
+					-- 		callback = vim.lsp.buf.document_highlight,
+					-- 	})
+					-- 	vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+					-- 		buffer = event.buf,
+					-- 		group = highlight_augroup,
+					-- 		callback = vim.lsp.buf.clear_references,
+					-- 	})
+					-- 	vim.api.nvim_create_autocmd("LspDetach", {
+					-- 		group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
+					-- 		callback = function(event2)
+					-- 			vim.lsp.buf.clear_references()
+					-- 			vim.api.nvim_clear_autocmds({ group = "kickstart-lsp-highlight", buffer = event2.buf })
+					-- 		end,
+					-- 	})
+					-- end
 
-						vim.api.nvim_create_autocmd("LspDetach", {
-							group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
-							callback = function(event2)
-								vim.lsp.buf.clear_references()
-								vim.api.nvim_clear_autocmds({ group = "kickstart-lsp-highlight", buffer = event2.buf })
-							end,
-						})
+					-- Rust-specific keybindings: Open registry crate in new WezTerm tab
+					if vim.bo[event.buf].filetype == "rust" then
+						map("<leader>rc", function()
+							local current_file = vim.api.nvim_buf_get_name(0)
+							-- vim.notify("Current file: " .. current_file, vim.log.levels.INFO)
+
+							if current_file:match("%.cargo/registry/") then
+								-- vim.notify("Found cargo registry pattern", vim.log.levels.INFO)
+
+								-- Extract crate root directory - match the full path pattern
+								local crate_root = current_file:match("(.*/%.cargo/registry/src/[^/]+/[^/]+)")
+								-- vim.notify("Crate root: " .. (crate_root or "nil"), vim.log.levels.INFO)
+
+								if crate_root then
+									-- Get the file path relative to the crate root
+									local relative_file = current_file:gsub(
+										"^" .. crate_root:gsub("([%-%.%+%[%]%(%)%$%^%%%?%*])", "%%%1") .. "/",
+										""
+									)
+									local crate_name = crate_root:match("([^/]+)$"):gsub("-[%d%.%-]+$", "") -- Remove version suffix
+
+									-- Build the command
+									local spawn_cmd = string.format(
+										"wezterm cli spawn --cwd %s -- nvim %s",
+										vim.fn.shellescape(crate_root),
+										vim.fn.shellescape(relative_file)
+									)
+									-- Open new WezTerm tab, cd to crate root, then open the file
+									local result = vim.fn.system(spawn_cmd)
+
+									-- Extract pane ID from result and set tab title
+									local pane_id = result:match("(%d+)")
+
+									if not pane_id then
+										-- vim.notify("Could not extract pane ID from result", vim.log.levels.WARN)
+									else
+										local title_cmd = string.format(
+											'wezterm cli set-tab-title --pane-id %s "%s"',
+											pane_id,
+											crate_name
+										)
+										vim.fn.system(title_cmd)
+									end
+								else
+									-- vim.notify("Could not extract crate root", vim.log.levels.WARN)
+								end
+								-- vim.notify(
+								-- 	string.format("Opened crate %s in new WezTerm tab", vim.fn.shellescape(crate_root)),
+								-- 	vim.log.levels.INFO
+								-- )
+							else
+								-- vim.notify("Not in a Cargo registry crate", vim.log.levels.WARN)
+							end
+						end, "[R]egistry [C]rate in new tab")
 					end
 				end,
 			})
@@ -153,9 +246,8 @@ return {
 			local capabilities = vim.lsp.protocol.make_client_capabilities()
 			capabilities = vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
 
-			-- Set position encoding capabilities to handle UTF-16/UTF-8 properly
-			capabilities.general = capabilities.general or {}
-			capabilities.general.positionEncodings = { "utf-16" }
+			-- Set offsetEncoding to utf-16 to avoid warnings with multiple LSP clients (e.g., Copilot + rust-analyzer)
+			capabilities.offsetEncoding = { "utf-16" }
 
 			-- Enable the following language servers
 			--  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -218,6 +310,58 @@ return {
 						},
 					},
 				},
+
+				rust_analyzer = {
+					settings = {
+						["rust-analyzer"] = {
+							cargo = {
+								features = "all",
+								-- Build only the current package, not workspace dependencies
+								-- buildScripts = {
+								-- 	enable = true,
+								-- },
+							},
+							-- Enable diagnostics from cargo check (clippy disabled for performance)
+							checkOnSave = {
+								enable = true,
+								command = "check",
+							},
+							-- Disable import grouping for faster analysis
+							imports = {
+								group = {
+									enable = false,
+								},
+							},
+							-- Disable postfix completions for cleaner suggestions
+							completion = {
+								postfix = {
+									enable = false,
+								},
+							},
+							-- Configure inlay hints for optimal performance and readability
+							inlayHints = {
+								bindingModeHints = { enable = false },
+								chainingHints = { enable = true },
+								closingBraceHints = { enable = true, minLines = 25 },
+								closureReturnTypeHints = { enable = "never" },
+								lifetimeElisionHints = { enable = "never", useParameterNames = false },
+								maxLength = 25,
+								parameterHints = { enable = true },
+								reborrowHints = { enable = "never" },
+								renderColons = true,
+								typeHints = {
+									enable = true,
+									hideClosureInitialization = false,
+									hideNamedConstructor = false,
+								},
+							},
+							-- Performance optimizations
+							procMacro = {
+								enable = true,
+							},
+						},
+					},
+				},
 			}
 
 			-- Ensure the servers and tools above are installed
@@ -253,11 +397,6 @@ return {
 			require("mason-lspconfig").setup({
 				handlers = {
 					function(server_name)
-						-- Skip rust-analyzer as it's handled by rustaceanvim
-						if server_name == "rust_analyzer" then
-							return
-						end
-
 						local server = servers[server_name] or {}
 						-- This handles overriding only values explicitly passed
 						-- by the server configuration above. Useful when disabling

@@ -70,6 +70,8 @@ wezterm.on("window-config-reloaded", function(window, pane)
 	overrides.color_scheme = scheme_for_appearance(get_appearance())
 	window:set_config_overrides(overrides)
 	window:toast_notification("wezterm", "configuration reloaded!", nil, 4000)
+	-- Manually trigger status update on config reload
+	window:perform_action(act.EmitEvent("update-status"), pane)
 end)
 
 --[[ Possible Modifier labels are:
@@ -99,8 +101,11 @@ config.window_decorations = "RESIZE"
 -- Enable mouse support (like tmux mouse on)
 config.enable_scroll_bar = false
 
+-- Track last active tab for MRU updates
+local last_active_tab = {}
+
 -- periodically update the status bar
-wezterm.on("update-right-status", function(window, pane)
+wezterm.on("update-status", function(window, pane)
 	local date = wezterm.strftime("%Y-%m-%d %H:%M:%S")
 	local workspace = window:active_workspace()
 
@@ -112,11 +117,72 @@ wezterm.on("update-right-status", function(window, pane)
 		{ Foreground = { Color = "#9ece6a" } }, -- Tokyo Night green
 		{ Text = date .. " " }, -- Add padding to the right
 	}))
+
+	-- Update MRU when active tab changes
+	local window_id = window:window_id()
+	local tab = window:active_tab()
+	if tab then
+		local current_tab_id = tab:tab_id()
+		if last_active_tab[window_id] ~= current_tab_id then
+			wezterm.log_info(
+				"Status: Tab changed from "
+					.. tostring(last_active_tab[window_id])
+					.. " to "
+					.. tostring(current_tab_id)
+			)
+			last_active_tab[window_id] = current_tab_id
+
+			-- Directly update MRU instead of emitting event
+			if not tab_mru[window_id] then
+				tab_mru[window_id] = {}
+				wezterm.log_info("Status: Initialized MRU list for window " .. window_id)
+			end
+
+			local mru_list = tab_mru[window_id]
+
+			-- Remove tab_id if it exists in the list
+			for i, id in ipairs(mru_list) do
+				if id == current_tab_id then
+					table.remove(mru_list, i)
+					break
+				end
+			end
+
+			-- Insert at the front (most recent)
+			table.insert(mru_list, 1, current_tab_id)
+
+			-- Clean up: remove entries for tabs that no longer exist
+			local valid_tabs = {}
+			for _, t in ipairs(window:mux_window():tabs()) do
+				valid_tabs[t:tab_id()] = true
+			end
+
+			local cleaned_list = {}
+			for _, id in ipairs(mru_list) do
+				if valid_tabs[id] then
+					table.insert(cleaned_list, id)
+				end
+			end
+			tab_mru[window_id] = cleaned_list
+
+			wezterm.log_info(
+				"Status: Updated MRU list, length=" .. #cleaned_list .. ", list=" .. table.concat(cleaned_list, ",")
+			)
+		end
+	end
 end)
+
+-- Set update interval to 1 second (1000ms) for real-time clock
+config.status_update_interval = 1000
 
 config.font_size = 16
 
--- config.line_height = 1.25
+-- config.font = wezterm.font("IBM Plex Mono", {
+-- 	weight = "Regular",
+-- 	italic = false,
+-- })
+-- --
+config.line_height = 1.1
 config.window_padding = {
 	left = 0,
 	right = 0,
@@ -182,6 +248,129 @@ end)
 wezterm.on("restore_session", function(window)
 	session_manager.restore_state(window)
 end)
+
+-- MRU (Most Recently Used) tab tracking
+-- Global table to track tab history per window
+local tab_mru = {}
+
+-- Update MRU order when a tab is activated
+wezterm.on("update-mru", function(window, pane)
+	local window_id = window:window_id()
+	local tab = window:active_tab()
+	if not tab then
+		wezterm.log_info("MRU Update: No active tab")
+		return
+	end
+
+	local tab_id = tab:tab_id()
+
+	-- Initialize MRU list for this window if it doesn't exist
+	if not tab_mru[window_id] then
+		tab_mru[window_id] = {}
+		wezterm.log_info("MRU Update: Initialized MRU list for window " .. window_id)
+	end
+
+	local mru_list = tab_mru[window_id]
+
+	-- Remove tab_id if it exists in the list
+	for i, id in ipairs(mru_list) do
+		if id == tab_id then
+			table.remove(mru_list, i)
+			break
+		end
+	end
+
+	-- Insert at the front (most recent)
+	table.insert(mru_list, 1, tab_id)
+
+	-- Clean up: remove entries for tabs that no longer exist
+	local valid_tabs = {}
+	for _, t in ipairs(window:mux_window():tabs()) do
+		valid_tabs[t:tab_id()] = true
+	end
+
+	local cleaned_list = {}
+	for _, id in ipairs(mru_list) do
+		if valid_tabs[id] then
+			table.insert(cleaned_list, id)
+		end
+	end
+	tab_mru[window_id] = cleaned_list
+
+	wezterm.log_info("MRU Update: tab_id=" .. tab_id .. ", mru_list=" .. table.concat(cleaned_list, ","))
+end)
+
+-- Cycle to next tab in MRU order
+local function activate_mru_tab(window, pane, direction)
+	local window_id = window:window_id()
+	local current_tab = window:active_tab()
+	if not current_tab then
+		wezterm.log_info("MRU: No active tab")
+		return
+	end
+
+	local current_tab_id = current_tab:tab_id()
+	local mru_list = tab_mru[window_id] or {}
+
+	wezterm.log_info(
+		"MRU: window_id="
+			.. tostring(window_id)
+			.. ", current_tab_id="
+			.. tostring(current_tab_id)
+			.. ", mru_list_len="
+			.. tostring(#mru_list)
+			.. ", direction="
+			.. tostring(direction)
+	)
+
+	-- If MRU list is empty or has only one tab, fall back to sequential
+	if #mru_list <= 1 then
+		wezterm.log_info("MRU: Falling back to sequential navigation (list too short)")
+		if direction > 0 then
+			window:perform_action(act.ActivateTabRelative(1), pane)
+		else
+			window:perform_action(act.ActivateTabRelative(-1), pane)
+		end
+		return
+	end
+
+	-- Find current position in MRU list
+	local current_pos = nil
+	for i, id in ipairs(mru_list) do
+		if id == current_tab_id then
+			current_pos = i
+			break
+		end
+	end
+
+	if not current_pos then
+		-- Current tab not in MRU list, activate the most recent one
+		wezterm.log_info("MRU: Current tab not in list, using position 1")
+		current_pos = 1
+	end
+
+	-- Calculate next position (wrapping around)
+	local next_pos = current_pos + direction
+	if next_pos > #mru_list then
+		next_pos = 1
+	elseif next_pos < 1 then
+		next_pos = #mru_list
+	end
+
+	local target_tab_id = mru_list[next_pos]
+	wezterm.log_info(
+		"MRU: Switching from pos " .. current_pos .. " to pos " .. next_pos .. " (tab_id=" .. target_tab_id .. ")"
+	)
+
+	-- Find and activate the target tab
+	for _, tab in ipairs(window:mux_window():tabs()) do
+		if tab:tab_id() == target_tab_id then
+			tab:activate()
+			wezterm.log_info("MRU: Tab activated successfully")
+			break
+		end
+	end
+end
 
 -- Custom event handler for creating new lazygit tab
 wezterm.on("lazygit-new-tab", function(window, pane)
@@ -382,6 +571,22 @@ config.keys = {
 		key = "p",
 		mods = "LEADER",
 		action = act.ActivateTabRelative(-1),
+	},
+
+	-- MRU tab switching (macOS-style with Ctrl+Tab)
+	{
+		key = "Tab",
+		mods = "CTRL",
+		action = wezterm.action_callback(function(window, pane)
+			activate_mru_tab(window, pane, 1)
+		end),
+	},
+	{
+		key = "Tab",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action_callback(function(window, pane)
+			activate_mru_tab(window, pane, -1)
+		end),
 	},
 
 	-- Switch to specific tabs with leader + number (like tmux)
@@ -807,6 +1012,8 @@ config.keys = {
 		mods = "CMD",
 		action = wezterm.action_callback(rerun_last_command_in_prev_pane),
 	},
+	{ key = "UpArrow", mods = "SHIFT", action = act.ScrollToPrompt(-1) },
+	{ key = "DownArrow", mods = "SHIFT", action = act.ScrollToPrompt(1) },
 
 	-- Switch to default workspace with Escape key, or emit escape if already in default
 	-- {

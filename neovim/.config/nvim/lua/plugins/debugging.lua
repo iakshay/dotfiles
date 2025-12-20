@@ -90,6 +90,39 @@ return {
 			require("dap-python").resolve_python = function()
 				return vim.fn.exepath("python")
 			end
+
+			-- Rust DAP configuration with codelldb
+			dap.adapters.codelldb = {
+				type = "server",
+				port = "${port}",
+				executable = {
+					command = vim.fn.stdpath("data") .. "/mason/bin/codelldb",
+					args = { "--port", "${port}" },
+				},
+			}
+
+			dap.configurations.rust = {
+				{
+					name = "Launch",
+					type = "codelldb",
+					request = "launch",
+					program = function()
+						-- Try to find the binary in target/debug
+						return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
+					end,
+					cwd = "${workspaceFolder}",
+					stopOnEntry = false,
+					args = {},
+					runInTerminal = false,
+				},
+				{
+					name = "Attach to process",
+					type = "codelldb",
+					request = "attach",
+					pid = require("dap.utils").pick_process,
+					args = {},
+				},
+			}
 -- stylua: ignore
 
 			-- load mason-nvim-dap here, after all adapters have been setup

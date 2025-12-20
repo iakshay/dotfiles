@@ -184,9 +184,9 @@ function gl() {
 }
 
 # ---- Node Version Manager (nvm) ----
-# export NVM_DIR="$HOME/.nvm"
-#   [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-#   [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+export NVM_DIR="$HOME/.nvm"
+  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 
 # ---- Python----
@@ -216,6 +216,7 @@ fi
 
 
 source ~/.zsh/internal.zsh
+source ~/.dotfiles/scripts/wezterm.sh
 source ~/.dotfiles/scripts/worktree-manager.zsh
 source ~/.dotfiles/scripts/cargo-worktree-target.zsh
 
@@ -259,4 +260,4 @@ alias ze='vim ~/.zshrc'
 alias kb=karabiner_cli
 alias lg=lazygit
 export GOKU_EDN_CONFIG_FILE=$HOME/.config/karabiner/karabiner.edn
-
+export GIT_LFS_SKIP_SMUDGE=1

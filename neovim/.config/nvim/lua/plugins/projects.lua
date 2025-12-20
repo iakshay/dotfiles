@@ -8,7 +8,7 @@ return {
 	---@type AutoSession.Config
 	opts = {
 		allowed_dirs = { "~/Projects/*", "~/worktrees/**" },
-		-- log_level = 'debug',
+		log_level = 'error', -- Changed from 'debug' to reduce quit time
 
 		-- Session lens configuration for telescope integration
 		session_lens = {
