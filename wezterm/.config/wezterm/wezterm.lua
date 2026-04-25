@@ -103,6 +103,8 @@ config.enable_scroll_bar = false
 
 -- Track last active tab for MRU updates
 local last_active_tab = {}
+-- MRU (Most Recently Used) tab tracking
+local tab_mru = {}
 
 -- periodically update the status bar
 wezterm.on("update-status", function(window, pane)
@@ -204,8 +206,13 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_wid
 	end
 
 	-- Clean up the title - remove common prefixes and trim
+	title = title:gsub("^[^@]+@[^:]+:", "") -- Remove user@host: prefix (SSH format)
 	title = title:gsub("^~/", "") -- Remove home directory prefix
 	title = title:gsub("^/Users/[^/]+/", "") -- Remove /Users/username/ prefix
+	title = title:gsub("^/home/[^/]+/", "") -- Remove /home/username/ prefix (remote)
+	title = title:gsub("^workspace/", "") -- Remove workspace/ prefix
+	title = title:gsub("^SSH:", "") -- Remove SSH: domain prefix
+	title = title:gsub("^SSHMUX:", "") -- Remove SSHMUX: domain prefix
 
 	-- Check if any pane in the tab is zoomed
 	local is_zoomed = false
@@ -236,6 +243,9 @@ end)
 -- -- Connect automatically to the mux server if it is running
 -- config.default_gui_startup_args = { "connect", "unix" }
 
+-- SSH domains are auto-populated from ~/.ssh/config
+-- devbox will be available as "SSHMUX:devbox" (multiplexing) and "SSH:devbox" (plain)
+
 -- Session management
 
 local session_manager = require("wezterm-session-manager/session-manager")
@@ -248,10 +258,6 @@ end)
 wezterm.on("restore_session", function(window)
 	session_manager.restore_state(window)
 end)
-
--- MRU (Most Recently Used) tab tracking
--- Global table to track tab history per window
-local tab_mru = {}
 
 -- Update MRU order when a tab is activated
 wezterm.on("update-mru", function(window, pane)
@@ -693,10 +699,10 @@ config.keys = {
 		}),
 	},
 
-	-- Toggle status bar visibility (like tmux prefix + d)
+	-- Toggle status bar visibility
 	{
 		key = "d",
-		mods = "LEADER",
+		mods = "LEADER|SHIFT",
 		action = wezterm.action_callback(function(window, pane)
 			local overrides = window:get_config_overrides() or {}
 			if overrides.enable_tab_bar == true then
@@ -966,6 +972,32 @@ config.keys = {
 		end),
 	},
 
+	-- Toggle between devbox workspace and default workspace (leader+d)
+	{
+		key = "d",
+		mods = "LEADER",
+		action = wezterm.action_callback(function(window, pane)
+			local current_workspace = window:active_workspace()
+
+			if current_workspace == "devbox" then
+				-- Switch back to default workspace
+				window:perform_action(act.SwitchToWorkspace({ name = "default" }), pane)
+			else
+				-- Create new devbox workspace using SSH multiplexing domain
+				window:perform_action(
+					act.SwitchToWorkspace({
+						name = "devbox",
+						spawn = {
+							domain = { DomainName = "SSHMUX:devbox" },
+							cwd = "/home/akshay.aurora/workspace/smithdb",
+						},
+					}),
+					pane
+				)
+			end
+		end),
+	},
+
 	-- Cycle through workspaces with Ctrl+backtick
 	{
 		key = "`",
@@ -1077,41 +1109,21 @@ config.key_tables = {
 		},
 	},
 	search_mode = {
-		{
-			key = "Escape",
-			mods = "NONE",
-			action = act.Multiple({ act.CopyMode("ClearPattern"), act.CopyMode("Close") }),
-		},
-		{
-			key = "q",
-			mods = "NONE",
-			action = act.Multiple({ act.CopyMode("ClearPattern"), act.CopyMode("Close") }),
-		},
+		-- Close search
+		{ key = "Escape", mods = "NONE", action = act.CopyMode("Close") },
 		{ key = "c", mods = "CTRL", action = act.CopyMode("Close") },
 
-		-- Vim navigation for search
-		{ key = "j", mods = "NONE", action = act.CopyMode("NextMatch") },
-		{ key = "k", mods = "NONE", action = act.CopyMode("PriorMatch") },
-		{ key = "n", mods = "NONE", action = act.CopyMode("NextMatch") },
-		{ key = "n", mods = "SHIFT", action = act.CopyMode("PriorMatch") }, -- This is 'N'
+		-- Navigate matches (multiple intuitive options)
+		{ key = "Enter", mods = "NONE", action = act.CopyMode("NextMatch") },
+		{ key = "Enter", mods = "SHIFT", action = act.CopyMode("PriorMatch") },
+		{ key = "n", mods = "CTRL", action = act.CopyMode("NextMatch") },
+		{ key = "p", mods = "CTRL", action = act.CopyMode("PriorMatch") },
+		{ key = "DownArrow", mods = "NONE", action = act.CopyMode("NextMatch") },
+		{ key = "UpArrow", mods = "NONE", action = act.CopyMode("PriorMatch") },
 
 		-- Page movement
-		{
-			key = "d",
-			mods = "CTRL",
-			action = act.Multiple({
-				act.CopyMode({ MoveByPage = 0.5 }),
-				act.CopyMode({ SetSelectionMode = "Cell" }),
-			}),
-		},
-		{
-			key = "u",
-			mods = "CTRL",
-			action = act.Multiple({
-				act.CopyMode({ MoveByPage = -0.5 }),
-				act.CopyMode({ SetSelectionMode = "Cell" }),
-			}),
-		},
+		{ key = "d", mods = "CTRL", action = act.CopyMode({ MoveByPage = 0.5 }) },
+		{ key = "u", mods = "CTRL", action = act.CopyMode({ MoveByPage = -0.5 }) },
 	},
 }
 config.launch_menu = {

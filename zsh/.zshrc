@@ -1,7 +1,7 @@
 # zmodload zsh/zprof
 export PATH=$PATH:/opt/homebrew/bin
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
-export PATH="$HOME/.deno/bin:~$HOME/.dotfiles/scripts:$PATH"
+export PATH="$HOME/.deno/bin:$HOME/.dotfiles/scripts:$HOME/.dotfiles/scripts/devbox:$PATH"
 export XDG_CONFIG_HOME="$HOME/.config"
 
 mkdir -p "$HOME/.zsh"
@@ -261,3 +261,8 @@ alias kb=karabiner_cli
 alias lg=lazygit
 export GOKU_EDN_CONFIG_FILE=$HOME/.config/karabiner/karabiner.edn
 export GIT_LFS_SKIP_SMUDGE=1
+# if cargo target directory is set
+# if [[ -n "$CARGO_TARGET_DIR" ]]; then
+#      alias codex="codex --add-dir $CARGO_TARGET_DIR"
+# fi
+alias utc="date -u '+%Y-%m-%d %H:%M:%S UTC'"

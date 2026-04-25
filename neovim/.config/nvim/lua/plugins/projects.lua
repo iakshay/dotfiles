@@ -7,8 +7,12 @@ return {
 	---@module "auto-session"
 	---@type AutoSession.Config
 	opts = {
-		allowed_dirs = { "~/Projects/*", "~/worktrees/**" },
-		log_level = 'error', -- Changed from 'debug' to reduce quit time
+		-- Use explicit paths instead of globs to avoid slow expansion
+		allowed_dirs = { "~/Projects", "~/worktrees" },
+		log_level = 'error',
+
+		-- Don't save these buffer types in sessions (prevents conflicts on restore)
+		bypass_save_filetypes = { "neo-tree", "neo-tree-popup" },
 
 		-- Session lens configuration for telescope integration
 		session_lens = {

@@ -5,8 +5,8 @@
 [alias]
   co = checkout
   br = branch
-  pu = "!f() { B=$(git rev-parse --abbrev-ref HEAD);git push origin \"$B:akshay/$B\"; }; f"
-  puf = "!f() { B=$(git rev-parse --abbrev-ref HEAD);git push origin \"$B:akshay/$B\" --force; }; f"
+  pu = "!f() { B=$(git rev-parse --abbrev-ref HEAD);git push -u origin \"$B:akshay/$B\"; }; f"
+  puf = "!f() { B=$(git rev-parse --abbrev-ref HEAD);git push -u origin \"$B:akshay/$B\" --force-with-lease; }; f"
   dirclone = "!$HOME/.dotfiles/scripts/git-dirclone"
 
 [core]

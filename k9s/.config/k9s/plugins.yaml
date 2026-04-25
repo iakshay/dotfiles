@@ -1,0 +1,16 @@
+plugins:
+  force-delete:
+    shortCut: Shift-K
+    description: Force kill pod (no grace period)
+    scopes:
+      - pods
+    command: kubectl
+    background: true
+    args:
+      - delete
+      - pod
+      - $NAME
+      - -n
+      - $NAMESPACE
+      - --grace-period=0
+      - --force

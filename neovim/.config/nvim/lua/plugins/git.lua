@@ -254,6 +254,52 @@ return {
 		end,
 	},
 	{
+		"sindrets/diffview.nvim",
+		dependencies = { "nvim-lua/plenary.nvim" },
+		config = function()
+			-- Better diff algorithm + word-level matching
+			vim.opt.diffopt:append("algorithm:histogram")
+			vim.opt.diffopt:append("linematch:60")
+			vim.opt.diffopt:append("indent-heuristic")
+
+			require("diffview").setup({
+				enhanced_diff_hl = true, -- word-level highlights within changed lines
+				view = {
+					default = { layout = "diff2_horizontal" },
+					merge_tool = { layout = "diff3_horizontal" },
+				},
+				hooks = {
+					view_opened = function()
+						-- Sidebar file status letters
+						vim.api.nvim_set_hl(0, "DiffviewStatusAdded", { fg = "#4ade80", bold = true })
+						vim.api.nvim_set_hl(0, "DiffviewStatusModified", { fg = "#f59e0b", bold = true })
+						vim.api.nvim_set_hl(0, "DiffviewStatusDeleted", { fg = "#f87171", bold = true })
+						vim.api.nvim_set_hl(0, "DiffviewStatusRenamed", { fg = "#60a5fa", bold = true })
+						-- Insertion/deletion counters in sidebar
+						vim.api.nvim_set_hl(0, "DiffviewFilePanelInsertions", { fg = "#4ade80" })
+						vim.api.nvim_set_hl(0, "DiffviewFilePanelDeletions", { fg = "#f87171" })
+					end,
+				},
+			})
+
+			vim.keymap.set("n", "<leader>gd", "<cmd>DiffviewOpen<CR>", { desc = "Diff View (working tree)" })
+			vim.keymap.set("n", "<leader>gD", "<cmd>DiffviewOpen origin/main...HEAD<CR>", { desc = "Diff View vs origin/main (PR)" })
+			vim.keymap.set("n", "<leader>gf", "<cmd>DiffviewFileHistory %<CR>", { desc = "File History (current file)" })
+			vim.keymap.set("n", "<leader>gF", "<cmd>DiffviewFileHistory<CR>", { desc = "File History (repo)" })
+			vim.keymap.set("n", "<leader>gx", "<cmd>DiffviewClose<CR>", { desc = "Close Diff View" })
+			vim.keymap.set("n", "<leader>gc", function()
+				local opt = vim.opt.diffopt:get()
+				if vim.tbl_contains(opt, "context:999") then
+					vim.opt.diffopt:remove("context:999")
+					vim.notify("Diff: collapsed context")
+				else
+					vim.opt.diffopt:append("context:999")
+					vim.notify("Diff: full context")
+				end
+			end, { desc = "Toggle full diff context" })
+		end,
+	},
+	{
 		"pwntester/octo.nvim",
 		requires = {
 			"nvim-lua/plenary.nvim",

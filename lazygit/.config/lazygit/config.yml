@@ -3,6 +3,8 @@ gui:
     skipDiscardChangeWarning: true
     nerdFontsVersion: "3"
     scrollHeight: 50
+    expandFocusedSidePanel: true
+    expandedSidePanelWeight: 3
     authorColors:
         "Akshay Aurora": "#ff7eb7"
 git:

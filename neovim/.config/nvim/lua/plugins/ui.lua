@@ -57,6 +57,15 @@ return {
 	{
 		"folke/tokyonight.nvim",
 		priority = 1000, -- Make sure to load this before all the other start plugins.
+		opts = {
+			on_highlights = function(hl, c)
+				-- Stronger diff colors for diffview
+				hl.DiffAdd = { bg = "#1a3a1a" }     -- green tint for added lines
+				hl.DiffDelete = { bg = "#3a1a1a" }  -- red tint for deleted lines
+				hl.DiffChange = { bg = "#1a2a3a" }  -- blue tint for changed lines
+				hl.DiffText = { bg = "#0d4a6e", bold = true } -- bright blue for changed words
+			end,
+		},
 		init = function()
 			vim.cmd.colorscheme("tokyonight-night")
 			vim.cmd.hi("Comment gui=none")
